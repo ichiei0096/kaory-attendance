@@ -321,12 +321,12 @@
       const rouletteDiv = document.getElementById("roulette-area");
       rouletteDiv.innerHTML = '<span style="color:#0072bc;">ルーレット中...</span>';
       setTimeout(() => {
-        const isWin = Math.random() < 0.5;
+        const isWin = Math.random() < 0.5; // 当たり確率はここで調整
         if (isWin) {
           rouletteDiv.innerHTML = `<div class="roulette-win">
             🎉当たり！ジュース一本無料！🎉<br>
             <span style="font-size:1em;">スクショを撮って総務部へ提示してね！</span><br>
-            <img src="https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" alt="当たり" style="width:120px;margin-top:5px;">
+            <video src="2w2RgwYcL080demHj2RyNDjIRJU.mp4" autoplay loop muted playsinline style="width:180px;max-width:95vw;margin-top:5px;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,0.13);"></video>
           </div>`;
         } else {
           rouletteDiv.innerHTML = `<div class="roulette-lose">
