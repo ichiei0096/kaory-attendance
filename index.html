@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>KAORY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Meiryo', sans-serif;
+      background: #f2f6fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #0072bc;
+      color: #fff;
+      padding: 18px 10px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .main-title {
+      font-size: 2em;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 1.05em;
+      opacity: 0.92;
+      letter-spacing: 0.04em;
+    }
+    main {
+      max-width: 480px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      padding: 24px 18px 32px 18px;
+    }
+    #result {
+      font-size: 1.2em;
+      margin: 12px 0;
+      min-height: 1.8em;
+    }
+    #history {
+      margin-top: 24px;
+      background: #f8f8f8;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.98em;
+      word-break: break-all;
+    }
+    .btn {
+      background: #0072bc;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 28px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #005fa3;
+    }
+    .hidden {
+      display: none;
+    }
+    .history-entry {
+      margin-bottom: 10px;
+      border-bottom: 1px dotted #b2cbe4;
+      padding-bottom: 7px;
+    }
+    .edit-btn, .delete-btn {
+      background: #eee;
+      color: #333;
+      border: none;
+      border-radius: 3px;
+      padding: 3px 9px;
+      font-size: 0.97em;
+      margin-left: 7px;
+      cursor: pointer;
+    }
+    .edit-btn:hover, .delete-btn:hover {
+      background: #cbe3fa;
+    }
+    .input-row {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-row label {
+      min-width: 80px;
+      font-weight: bold;
+    }
+    .input-row input {
+      flex: 1;
+      font-size: 1.1em;
+      padding: 7px 8px;
+      border: 1px solid #b2cbe4;
+      border-radius: 5px;
+    }
+    .inout-btns {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .inout-btn {
+      flex: 1;
+      font-size: 1.1em;
+      font-weight: bold;
+      padding: 12px 0;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .in-btn {
+      background: #4caf50;
+      color: #fff;
+    }
+    .in-btn:hover {
+      background: #388e3c;
+    }
+    .out-btn {
+      background: #f44336;
+      color: #fff;
+    }
+    .out-btn:hover {
+      background: #c62828;
+    }
+    .logout-btn {
+      background: #999;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 7px 18px;
+      font-size: 1em;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: #666;
+    }
+    @media (max-width: 600px) {
+      main {
+        margin: 12px 3px;
+        padding: 12px 3vw 16px 3vw;
+      }
+      header {
+        font-size: 1em;
+        padding: 12px 3vw;
+      }
+      .main-title {
+        font-size: 1.3em;
+      }
+      .subtitle {
+        font-size: 0.95em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="main-title">KAORY</div>
+    <div class="subtitle">株式会社 成伸工業 出退勤専用アプリ</div>
+  </header>
+  <main>
+    <!-- 社員番号入力画面 -->
+    <div id="login-area">
+      <h2 style="margin-top:0;">社員番号入力</h2>
+      <div class="input-row">
+        <label for="empno">社員番号</label>
+        <input type="text" id="empno" maxlength="10" autocomplete="off" placeholder="例: 1234">
+      </div>
+      <button class="btn" onclick="login()">次へ</button>
+      <div id="login-error" style="color:red;min-height:1.5em;"></div>
+    </div>
+    <!-- 打刻画面 -->
+    <div id="stamp-area" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">出退勤打刻</h2>
+        <button class="logout-btn" onclick="logout()">ログアウト</button>
+      </div>
+      <div style="margin-bottom:10px;">
+        <b>社員番号：</b><span id="current-empno"></span>
+      </div>
+      <div class="inout-btns">
+        <button class="inout-btn in-btn" onclick="startQrReader('出勤')">出勤</button>
+        <button class="inout-btn out-btn" onclick="startQrReader('退勤')">退勤</button>
+      </div>
+      <div id="result"></div>
+      <div id="qr-reader" class="hidden" style="margin-top:14px;"></div>
+      <div id="history"></div>
+    </div>
+  </main>
+  <script>
+    let qrReader = null;
+    let qrProcessing = false;
+    let punchType = "";
+    let currentEmpNo = "";
+
+    // ページ表示時にログイン状態確認
+    window.onload = function() {
+      const empno = sessionStorage.getItem("empno");
+      if(empno) {
+        showStampArea(empno);
+      } else {
+        showLoginArea();
+      }
+    };
+
+    function login() {
+      const emp = document.getElementById('empno').value.trim();
+      if (!emp) {
+        document.getElementById("login-error").innerText = "社員番号を入力してください";
+        return;
+      }
+      sessionStorage.setItem("empno", emp);
+      showStampArea(emp);
+    }
+
+    function logout() {
+      sessionStorage.removeItem("empno");
+      showLoginArea();
+    }
+
+    function showLoginArea() {
+      document.getElementById("login-area").classList.remove("hidden");
+      document.getElementById("stamp-area").classList.add("hidden");
+      document.getElementById('empno').value = "";
+      document.getElementById("login-error").innerText = "";
+    }
+
+    function showStampArea(empno) {
+      currentEmpNo = empno;
+      document.getElementById("current-empno").innerText = empno;
+      document.getElementById("login-area").classList.add("hidden");
+      document.getElementById("stamp-area").classList.remove("hidden");
+      document.getElementById("result").innerHTML = "";
+      document.getElementById("qr-reader").classList.add("hidden");
+      renderHistory();
+    }
+
+    function startQrReader(type) {
+      punchType = type;
+      document.getElementById("result").innerHTML = "";
+      document.getElementById("qr-reader").classList.remove("hidden");
+      if (qrReader) qrReader.clear();
+      qrReader = new Html5Qrcode("qr-reader");
+      qrProcessing = false;
+      qrReader.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          if (qrProcessing) return;
+          qrProcessing = true;
+          document.getElementById("result").innerHTML = `<span style="color:#0072bc;">位置情報を取得しています...</span>`;
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              addHistory(currentEmpNo, punchType, qrCodeMessage, new Date(), position.coords, navigator.userAgent);
+              document.getElementById("result").innerHTML = `<span style="color:green;">${punchType}打刻しました</span>`;
+              qrReader.stop();
+              document.getElementById("qr-reader").classList.add("hidden");
+              qrProcessing = false;
+            },
+            function(error) {
+              addHistory(currentEmpNo, punchType, qrCodeMessage, new Date(), null, navigator.userAgent);
+              document.getElementById("result").innerHTML = `<span style="color:red;">位置情報エラー（${error.message}）</span>`;
+              qrReader.stop();
+              document.getElementById("qr-reader").classList.add("hidden");
+              qrProcessing = false;
+            }
+          );
+        },
+        errorMessage => {}
+      );
+    }
+
+    function addHistory(empno, type, qr, date, coords, device) {
+      let key = "history_" + empno;
+      let history = JSON.parse(localStorage.getItem(key) || "[]");
+      const entry = {
+        type,
+        qr,
+        date: date.toLocaleString(),
+        lat: coords ? coords.latitude : null,
+        lng: coords ? coords.longitude : null,
+        device: device || ""
+      };
+      history.unshift(entry);
+      localStorage.setItem(key, JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      let key = "history_" + currentEmpNo;
+      let history = JSON.parse(localStorage.getItem(key) || "[]");
+      let html = "<b>打刻履歴</b><br>";
+      if (history.length === 0) {
+        html += "<span style='color:#888;'>まだ履歴がありません</span>";
+      } else {
+        history.forEach((h, i) => {
+          html += `<div class="history-entry">
+            [${h.date}]<br>
+            種別: <b>${h.type}</b><br>
+            QR内容: <b>${h.qr}</b>
+            ${h.lat && h.lng ? `<br>位置: <a href="https://www.google.com/maps?q=${h.lat},${h.lng}" target="_blank">${h.lat.toFixed(5)},${h.lng.toFixed(5)}</a>` : "<br>位置: なし"}
+            <br>端末情報: <span style="font-size:0.95em;">${h.device ? escapeHtml(h.device) : "なし"}</span>
+            <br>
+            <button class="edit-btn" onclick="editHistory(${i})">編集</button>
+            <button class="delete-btn" onclick="deleteHistory(${i})">削除</button>
+          </div>`;
+        });
+      }
+      document.getElementById("history").innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"'`]/g, function(match) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '`': '&#x60;'
+        })[match];
+      });
+    }
+
+    function editHistory(index) {
+      let key = "history_" + currentEmpNo;
+      let history = JSON.parse(localStorage.getItem(key) || "[]");
+      let h = history[index];
+      let newQr = prompt("QR内容を編集", h.qr);
+      if (newQr && newQr.trim()) {
+        h.qr = newQr.trim();
+        history[index] = h;
+        localStorage.setItem(key, JSON.stringify(history));
+        renderHistory();
+      }
+    }
+
+    function deleteHistory(index) {
+      if (!confirm("この履歴を削除しますか？")) return;
+      let key = "history_" + currentEmpNo;
+      let history = JSON.parse(localStorage.getItem(key) || "[]");
+      history.splice(index, 1);
+      localStorage.setItem(key, JSON.stringify(history));
+      renderHistory();
+    }
+  </script>
+</body>
+</html>
