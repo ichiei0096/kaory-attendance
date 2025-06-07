@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
+    /* 既存スタイルは省略（元コードと同じ） */
     body {
       font-family: 'Segoe UI', 'Meiryo', sans-serif;
       background: #f2f6fa;
@@ -44,6 +45,10 @@
       font-size: 1.2em;
       margin: 12px 0;
       min-height: 1.8em;
+    }
+    #roulette-area {
+      margin: 12px 0 0 0;
+      min-height: 3em;
     }
     #history {
       margin-top: 24px;
@@ -147,6 +152,30 @@
     .logout-btn:hover {
       background: #666;
     }
+    /* ルーレット演出用 */
+    .roulette-win {
+      color: #eabf00;
+      background: #fffbe8;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 5px;
+      animation: flash 1s 2;
+    }
+    .roulette-lose {
+      color: #888;
+      background: #f4f4f4;
+      font-size: 1.1em;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 5px;
+    }
+    @keyframes flash {
+      0% { background: #fffbe8; }
+      50% { background: #fff3a0; }
+      100% { background: #fffbe8; }
+    }
     @media (max-width: 600px) {
       main {
         margin: 12px 3px;
@@ -195,6 +224,7 @@
         <button class="inout-btn out-btn" onclick="startQrReader('退勤')">退勤</button>
       </div>
       <div id="result"></div>
+      <div id="roulette-area"></div>
       <div id="qr-reader" class="hidden" style="margin-top:14px;"></div>
       <div id="history"></div>
     </div>
@@ -243,6 +273,7 @@
       document.getElementById("login-area").classList.add("hidden");
       document.getElementById("stamp-area").classList.remove("hidden");
       document.getElementById("result").innerHTML = "";
+      document.getElementById("roulette-area").innerHTML = "";
       document.getElementById("qr-reader").classList.add("hidden");
       renderHistory();
     }
@@ -250,6 +281,7 @@
     function startQrReader(type) {
       punchType = type;
       document.getElementById("result").innerHTML = "";
+      document.getElementById("roulette-area").innerHTML = "";
       document.getElementById("qr-reader").classList.remove("hidden");
       if (qrReader) qrReader.clear();
       qrReader = new Html5Qrcode("qr-reader");
@@ -268,6 +300,7 @@
               qrReader.stop();
               document.getElementById("qr-reader").classList.add("hidden");
               qrProcessing = false;
+              showRoulette();
             },
             function(error) {
               addHistory(currentEmpNo, punchType, qrCodeMessage, new Date(), null, navigator.userAgent);
@@ -275,11 +308,33 @@
               qrReader.stop();
               document.getElementById("qr-reader").classList.add("hidden");
               qrProcessing = false;
+              showRoulette();
             }
           );
         },
         errorMessage => {}
       );
+    }
+
+    // ルーレット演出を表示する関数
+    function showRoulette() {
+      const rouletteDiv = document.getElementById("roulette-area");
+      rouletteDiv.innerHTML = '<span style="color:#0072bc;">ルーレット中...</span>';
+      setTimeout(() => {
+        const isWin = Math.random() < 0.5;
+        if (isWin) {
+          rouletteDiv.innerHTML = `<div class="roulette-win">
+            🎉当たり！ジュース一本無料！🎉<br>
+            <span style="font-size:1em;">スクショを撮って総務部へ提示してね！</span><br>
+            <img src="https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" alt="当たり" style="width:120px;margin-top:5px;">
+          </div>`;
+        } else {
+          rouletteDiv.innerHTML = `<div class="roulette-lose">
+            はずれ～また挑戦してね！<br>
+            <img src="https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" alt="はずれ" style="width:80px;margin-top:5px;">
+          </div>`;
+        }
+      }, 900); // ルーレット中の演出を0.9秒表示
     }
 
     function addHistory(empno, type, qr, date, coords, device) {
