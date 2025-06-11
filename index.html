@@ -6,6 +6,7 @@
   <title>KAORY - 株式会社 成伸工業 出退勤管理システム</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
+    /* ...（CSSは前回と同じ。省略してもOKです）... */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
@@ -423,7 +424,12 @@
       qrReader = new Html5Qrcode("qr-reader");
       qrReader.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        {
+          fps: 30, // フレームレートUP（精度・速度向上）
+          qrbox: { width: 300, height: 300 }, // 検出範囲UP
+          aspectRatio: 1.0, // 正方形に近い
+          disableFlip: false // インカメラ対応
+        },
         qrCodeMessage => {
           if (qrProcessing) return;
           qrProcessing = true;
@@ -438,7 +444,8 @@
           });
         },
         errorMessage => {
-          // 読み取り失敗時は何もしない
+          // 読み取り失敗時にユーザーへ表示（デバッグ用）
+          //document.getElementById("stamp-message").innerHTML = `<span style="color:red;">${errorMessage}</span>`;
         }
       ).catch(err => {
         document.getElementById("stamp-message").innerHTML = `<span style="color:red;">カメラが起動できませんでした。許可を確認してください。</span>`;
@@ -448,9 +455,7 @@
     }
     // QR読取後の打刻処理
     function processQrResult(qrCodeMessage, type) {
-      // ここでQRコードの内容チェックや認証を必要に応じて実装
-      // 例: "kaory-entrance" というQRコードのみ有効とする
-      if (qrCodeMessage !== "kaory-entrance") {
+      if (!qrCodeMessage || qrCodeMessage.trim() !== "kaory-entrance") {
         document.getElementById("stamp-message").innerHTML = `<span style="color:red;">無効なQRコードです。</span>`;
         return;
       }
@@ -484,7 +489,7 @@
         lng
       });
       document.getElementById("stamp-message").innerHTML = `<span style="color:#28a745;">${type}打刻が完了しました。</span>`;
-      showRoulette(type);
+      showRoulette(type); // ルーレットを必ず表示
       updateStampButtons();
       renderHistory();
     }
@@ -492,6 +497,7 @@
     // ルーレット表示
     function showRoulette(type) {
       const rouletteArea = document.getElementById("roulette-area");
+      rouletteArea.innerHTML = ""; // 前の表示を消す
       const isWin = Math.random() < 0.1; // 10%で当たり
       if (isWin) {
         rouletteArea.innerHTML = `<div class="roulette-win">🎉 おめでとう！${type}ガチャ大当たり！<br>本日のラッキー賞！</div>`;
