@@ -6,195 +6,383 @@
   <title>KAORY - 株式会社 成伸工業 出退勤管理システム</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    /* ...（CSSは前回と同じ。省略してもOKです）... */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
+      font-family: 'Segoe UI', 'Meiryo', sans-serif;
+      background: #f2f6fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #0072bc;
+      color: #fff;
+      padding: 18px 10px 12px 10px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      padding: 20px;
+      justify-content: center;
     }
-    .container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-      padding: 40px;
-      width: 100%;
-      max-width: 500px;
-      text-align: center;
+    .main-title {
+      font-size: 2em;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
     }
-    .logo { color: #0072bc; font-size: 2.5em; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);}
-    .company-name { color: #666; font-size: 1.1em; margin-bottom: 30px; font-weight: 500;}
-    .form-group { margin-bottom: 20px; text-align: left;}
-    label { display: block; margin-bottom: 8px; color: #333; font-weight: 500;}
-    select, input, textarea {
-      width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px;
-      transition: border-color 0.3s; font-family: inherit;
+    .subtitle {
+      font-size: 1.05em;
+      opacity: 0.92;
+      letter-spacing: 0.04em;
     }
-    textarea { resize: vertical; min-height: 100px;}
-    select:focus, input:focus, textarea:focus { outline: none; border-color: #0072bc; }
-    .login-btn, .stamp-btn, .admin-btn, .request-btn {
-      width: 100%; padding: 15px; background: linear-gradient(45deg, #0072bc, #00a0d2); color: white;
-      border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s; margin-top: 10px;
+    main {
+      max-width: 480px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      padding: 24px 18px 32px 18px;
     }
-    .login-btn:hover, .stamp-btn:hover, .admin-btn:hover, .request-btn:hover {
-      transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,114,188,0.3);
+    #result {
+      font-size: 1.2em;
+      margin: 12px 0;
+      min-height: 1.8em;
     }
-    .stamp-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 30px 0;}
-    .in-btn { background: linear-gradient(45deg, #4CAF50, #45a049);}
-    .out-btn { background: linear-gradient(45deg, #f44336, #da190b);}
-    .in-btn:hover { box-shadow: 0 10px 20px rgba(76,175,80,0.3);}
-    .out-btn:hover { box-shadow: 0 10px 20px rgba(244,67,54,0.3);}
-    .hidden { display: none !important;}
-    #user-greeting { color: #333; margin-bottom: 20px; font-size: 1.3em;}
     #roulette-area {
-      margin: 20px 0; padding: 20px; border-radius: 10px; min-height: 60px;
-      display: flex; align-items: center; justify-content: center; font-size: 1.1em; font-weight: bold;
+      margin: 12px 0 0 0;
+      min-height: 3em;
     }
-    #qr-reader {
-      margin: 20px 0; padding: 20px; border: 2px dashed #0072bc; border-radius: 10px; background: #f8f9fa; min-height: 300px;
+    #history {
+      margin-top: 24px;
+      background: #f8f8f8;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.98em;
+      word-break: break-all;
     }
-    .roulette-win { background: linear-gradient(45deg, #FFD700, #FFA500); color: #333; padding: 20px; border-radius: 15px; animation: bounce 0.6s ease-in-out;}
-    .roulette-lose { background: linear-gradient(45deg, #87CEEB, #4682B4); color: white; padding: 15px; border-radius: 10px;}
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0);}
-      40% { transform: translateY(-10px);}
-      60% { transform: translateY(-5px);}
+    .btn {
+      background: #0072bc;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 28px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: background 0.2s;
+      width: 100%;
     }
-    .logout-btn { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px;}
-    .logout-btn:hover { background: #5a6268;}
-    .error { color: #dc3545; font-size: 0.9em; margin-top: 5px;}
-    .success { color: #28a745; font-size: 0.9em; margin-top: 5px;}
-    #history { margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: left; max-height: 400px; overflow-y: auto;}
+    .btn:hover {
+      background: #005fa3;
+    }
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .hidden {
+      display: none;
+    }
     .history-entry {
-      background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #0072bc; font-size: 0.9em;
+      margin-bottom: 10px;
+      border-bottom: 1px dotted #b2cbe4;
+      padding-bottom: 7px;
     }
-    .edit-btn, .delete-btn, .approve-btn, .reject-btn {
-      padding: 5px 10px; margin: 5px 5px 0 0; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;
+    #login-area label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+      text-align: left;
     }
-    .edit-btn, .approve-btn { background: #28a745; color: white;}
-    .delete-btn, .reject-btn { background: #dc3545; color: white;}
-    .stamp-btn:disabled { background: #6c757d !important; cursor: not-allowed; transform: none !important;}
-    .request-form { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;}
-    .request-item { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #e1e5e9;}
-    .request-pending { border-left: 4px solid #ffc107;}
-    .request-approved { border-left: 4px solid #28a745;}
-    .request-rejected { border-left: 4px solid #dc3545;}
+    #login-area select, #login-area input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .input-row {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-row label {
+      min-width: 80px;
+      font-weight: bold;
+    }
+    .input-row input {
+      flex: 1;
+      font-size: 1.1em;
+      padding: 7px 8px;
+      border: 1px solid #b2cbe4;
+      border-radius: 5px;
+    }
+    .inout-btns {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .inout-btn {
+      flex: 1;
+      font-size: 1.1em;
+      font-weight: bold;
+      padding: 12px 0;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .in-btn {
+      background: #4caf50;
+      color: #fff;
+    }
+    .in-btn:hover {
+      background: #388e3c;
+    }
+    .in-btn:disabled {
+      background: #ccc !important;
+    }
+    .out-btn {
+      background: #f44336;
+      color: #fff;
+    }
+    .out-btn:hover {
+      background: #c62828;
+    }
+    .out-btn:disabled {
+      background: #ccc !important;
+    }
+    .logout-btn {
+      background: #999;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 7px 18px;
+      font-size: 1em;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: #666;
+    }
+    .roulette-win {
+      color: #eabf00;
+      background: #fffbe8;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 5px;
+      animation: flash 1s 2;
+    }
+    .roulette-lose {
+      color: #888;
+      background: #f4f4f4;
+      font-size: 1.1em;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 5px;
+    }
+    @keyframes flash {
+      0% { background: #fffbe8; }
+      50% { background: #fff3a0; }
+      100% { background: #fffbe8; }
+    }
+    /* 変更依頼フォーム */
+    .request-form {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .request-form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+      text-align: left;
+    }
+    .request-form select, .request-form input, .request-form textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .request-form textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    /* 管理者画面 */
+    #admin-area {
+      margin-top: 24px;
+    }
+    .admin-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.97em;
+      margin-top: 10px;
+      table-layout: fixed;
+    }
+    .admin-history-table th, .admin-history-table td {
+      border: 1px solid #b2cbe4;
+      padding: 4px 2px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .admin-history-table th {
+      background: #e9f3fa;
+      font-size: 0.97em;
+    }
+    .admin-history-table tr:nth-child(even) {
+      background: #f7fafc;
+    }
+    .request-item {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #e1e5e9;
+    }
+    .request-pending {
+      border-left: 4px solid #ffc107;
+    }
+    .request-approved {
+      border-left: 4px solid #28a745;
+    }
+    .request-rejected {
+      border-left: 4px solid #dc3545;
+    }
+    .approve-btn, .reject-btn {
+      padding: 5px 10px;
+      margin: 5px 5px 0 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
+    }
+    .approve-btn {
+      background: #28a745;
+      color: white;
+    }
+    .reject-btn {
+      background: #dc3545;
+      color: white;
+    }
     @media (max-width: 600px) {
-      .container { padding: 20px; margin: 10px;}
-      .logo { font-size: 2em;}
-      .stamp-buttons { grid-template-columns: 1fr;}
+      main {
+        margin: 12px 3px;
+        padding: 12px 3vw 16px 3vw;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- ログインエリア -->
+  <header>
+    <div class="main-title">KAORY</div>
+    <div class="subtitle">株式会社 成伸工業 出退勤管理システム</div>
+  </header>
+  <main>
+    <!-- ログイン選択画面 -->
     <div id="login-area">
-      <div class="logo">KAORY</div>
-      <div class="company-name">株式会社 成伸工業 出退勤管理システム</div>
-      <div class="form-group">
-        <label for="department">部署を選択してください</label>
-        <select id="department" onchange="updateSections()">
-          <option value="">-- 部署を選択 --</option>
-        </select>
+      <h2 style="margin-top:0;">ログイン</h2>
+      <label for="department">部署:</label>
+      <select id="department" name="department">
+        <option value="">-- 部署を選択してください --</option>
+      </select>
+
+      <label for="section">課:</label>
+      <select id="section" name="section" disabled>
+        <option value="">-- 課を選択してください --</option>
+      </select>
+
+      <label for="employee">名前:</label>
+      <select id="employee" name="employee" disabled>
+        <option value="">-- 名前を選択してください --</option>
+      </select>
+
+      <label for="empno">社員番号:</label>
+      <input type="text" id="empno" placeholder="社員番号を入力" disabled>
+
+      <button id="loginButton" class="btn" onclick="login()" disabled>ログイン</button>
+      <div id="login-error" style="color:red;min-height:1.5em;"></div>
+
+      <!-- 管理者ログインフォーム -->
+      <div id="admin-login-area" style="margin-top:22px;">
+        <hr>
+        <div><b>管理者専用ログイン</b></div>
+        <div class="input-row" style="margin-bottom:5px;">
+          <label for="admin-pass" style="min-width:70px;">パスワード</label>
+          <input type="password" id="admin-pass" maxlength="20" autocomplete="off" style="max-width:140px;">
+        </div>
+        <button class="btn" style="padding:8px 22px;font-size:1em;" onclick="adminLogin()">管理者ログイン</button>
+        <div id="admin-login-error" style="color:red;min-height:1.5em;"></div>
       </div>
-      <div class="form-group">
-        <label for="section">課を選択してください</label>
-        <select id="section" onchange="updateEmployees()" disabled>
-          <option value="">-- 課を選択 --</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="employee">お名前を選択してください</label>
-        <select id="employee" onchange="enableEmpNo()" disabled>
-          <option value="">-- 名前を選択 --</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="empno">社員番号を入力してください</label>
-        <input type="text" id="empno" placeholder="社員番号" disabled>
-      </div>
-      <button class="login-btn" onclick="login()">ログイン</button>
-      <div id="login-error" class="error"></div>
-      <button class="admin-btn" onclick="showAdminLogin()" style="margin-top: 20px; background: #6c757d;">管理者ログイン</button>
     </div>
-    <!-- 管理者ログインエリア -->
-    <div id="admin-login-area" class="hidden">
-      <h2>管理者ログイン</h2>
-      <div class="form-group">
-        <label for="admin-pass">パスワード</label>
-        <input type="password" id="admin-pass" placeholder="管理者パスワードを入力">
-      </div>
-      <button class="login-btn" onclick="adminLogin()">ログイン</button>
-      <div id="admin-login-error" class="error"></div>
-      <button onclick="showLoginArea()" class="logout-btn">戻る</button>
-    </div>
-    <!-- 打刻エリア -->
+
+    <!-- 打刻画面 -->
     <div id="stamp-area" class="hidden">
-      <h2 id="user-greeting">こんにちは！</h2>
-      <div class="stamp-buttons">
-        <button id="punch-in" class="stamp-btn in-btn" onclick="punchIn()">出勤</button>
-        <button id="punch-out" class="stamp-btn out-btn" onclick="punchOut()">退勤</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">出退勤打刻</h2>
+        <button class="logout-btn" onclick="logout()">ログアウト</button>
       </div>
+      <div style="margin-bottom:10px;">
+        <b>社員番号：</b><span id="current-empno"></span> <br>
+        <b>名前：</b><span id="current-empname"></span>
+      </div>
+      <div class="inout-btns">
+        <button id="punch-in-btn" class="inout-btn in-btn" onclick="startQrReader('出勤')">出勤</button>
+        <button id="punch-out-btn" class="inout-btn out-btn" onclick="startQrReader('退勤')">退勤</button>
+      </div>
+      <div id="result"></div>
       <div id="roulette-area"></div>
-      <div id="stamp-message" class="success"></div>
       <div id="qr-reader" class="hidden" style="margin-top:14px;"></div>
       <div id="history"></div>
+      
       <!-- 変更依頼フォーム -->
       <div class="request-form hidden" id="change-request-form">
         <h3>打刻時刻変更依頼</h3>
-        <div class="form-group">
-          <label for="request-type">変更する打刻</label>
-          <select id="request-type">
-            <option value="">-- 選択してください --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="request-time">変更後の時刻</label>
-          <input type="datetime-local" id="request-time">
-        </div>
-        <div class="form-group">
-          <label for="request-reason">変更理由</label>
-          <textarea id="request-reason" placeholder="変更理由を入力してください"></textarea>
-        </div>
-        <button class="request-btn" onclick="submitChangeRequest()">変更依頼を送信</button>
+        <label for="request-type">変更する打刻:</label>
+        <select id="request-type">
+          <option value="">-- 選択してください --</option>
+        </select>
+        
+        <label for="request-time">変更後の時刻:</label>
+        <input type="datetime-local" id="request-time">
+        
+        <label for="request-reason">変更理由:</label>
+        <textarea id="request-reason" placeholder="変更理由を入力してください"></textarea>
+        
+        <button class="btn" onclick="submitChangeRequest()">変更依頼を送信</button>
         <button class="logout-btn" onclick="hideChangeRequestForm()">キャンセル</button>
-        <div id="request-message" class="success"></div>
+        <div id="request-message" style="color:green;min-height:1.5em;"></div>
       </div>
-      <button onclick="showChangeRequestForm()" class="admin-btn" style="margin-top: 10px;">打刻時刻変更依頼</button>
-      <button onclick="logout()" class="logout-btn">ログアウト</button>
+      
+      <button class="btn" onclick="showChangeRequestForm()" style="margin-top: 10px;background:#6c757d;">打刻時刻変更依頼</button>
     </div>
-    <!-- 管理者エリア -->
+
+    <!-- 管理者画面 -->
     <div id="admin-area" class="hidden">
-      <h2>管理者画面</h2>
+      <h2 style="margin-top:0;">管理者画面</h2>
+      
       <!-- 変更依頼一覧 -->
       <div id="change-requests">
         <h3>変更依頼一覧</h3>
         <div id="requests-list"></div>
       </div>
+      
       <!-- 全打刻履歴 -->
-      <div id="admin-history" style="margin-top: 30px;"></div>
-      <button onclick="adminLogout()" class="logout-btn">ログアウト</button>
+      <div id="admin-history"></div>
+      <button class="logout-btn" onclick="adminLogout()">管理者ログアウト</button>
     </div>
-  </div>
-  <script>
-    // グローバル変数
-    let qrReader = null;
-    let qrProcessing = false;
-    let currentEmpNo = "";
-    let currentEmpName = "";
-    let currentPunchType = "";
-    let isAdminLoggedIn = false;
-    let historyData = {}; // 打刻履歴（メモリ内管理）
-    let changeRequests = []; // 変更依頼
+  </main>
 
-    // 組織データ（株式会社 成伸工業）
-    const organizationData = {
+  <script>
+    // --- 会社データ ---
+    const companyData = {
       "製造部": {
         "製造課": [
           "小坂 敏文", "片山 雄司", "豊田 崇聖", "岡 大成", "河本 卓哉",
@@ -233,140 +421,160 @@
       }
     };
 
-    // 初期化
-    document.addEventListener('DOMContentLoaded', function() {
-      initializeDepartments();
-    });
+    // --- グローバル変数 ---
+    let qrReader = null;
+    let qrProcessing = false;
+    let punchType = "";
+    let currentEmpNo = "";
+    let currentEmpName = "";
+    let historyData = {};
+    let changeRequests = [];
 
+    // --- DOM要素取得 ---
+    const departmentSelect = document.getElementById('department');
+    const sectionSelect = document.getElementById('section');
+    const employeeSelect = document.getElementById('employee');
+    const empnoInput = document.getElementById('empno');
+    const loginButton = document.getElementById('loginButton');
+    const loginError = document.getElementById('login-error');
+    const adminLoginError = document.getElementById('admin-login-error');
+
+    // --- 初期化処理 ---
+    window.onload = function() {
+      initializeDepartments();
+    };
+
+    // --- ログイン関連処理 ---
     function initializeDepartments() {
-      const departmentSelect = document.getElementById('department');
-      departmentSelect.innerHTML = '<option value="">-- 部署を選択 --</option>';
-      Object.keys(organizationData).forEach(dept => {
+      departmentSelect.innerHTML = '<option value="">-- 部署を選択してください --</option>';
+      Object.keys(companyData).forEach(dep => {
         const option = document.createElement('option');
-        option.value = dept;
-        option.textContent = dept;
+        option.value = dep;
+        option.textContent = dep;
         departmentSelect.appendChild(option);
       });
     }
 
-    function updateSections() {
-      const department = document.getElementById('department').value;
-      const sectionSelect = document.getElementById('section');
-      const employeeSelect = document.getElementById('employee');
-      const empnoInput = document.getElementById('empno');
-      sectionSelect.innerHTML = '<option value="">-- 課を選択 --</option>';
-      employeeSelect.innerHTML = '<option value="">-- 名前を選択 --</option>';
+    departmentSelect.addEventListener('change', function() {
+      const selectedDepartment = this.value;
+      sectionSelect.innerHTML = '<option value="">-- 課を選択してください --</option>';
+      employeeSelect.innerHTML = '<option value="">-- 名前を選択してください --</option>';
       empnoInput.value = '';
-      if (department && organizationData[department]) {
-        sectionSelect.disabled = false;
-        employeeSelect.disabled = true;
-        empnoInput.disabled = true;
-        Object.keys(organizationData[department]).forEach(section => {
+      sectionSelect.disabled = true;
+      employeeSelect.disabled = true;
+      empnoInput.disabled = true;
+      loginButton.disabled = true;
+      loginError.innerText = '';
+
+      if (selectedDepartment && companyData[selectedDepartment]) {
+        const sections = Object.keys(companyData[selectedDepartment]);
+        sections.forEach(sec => {
           const option = document.createElement('option');
-          option.value = section;
-          option.textContent = section;
+          option.value = sec;
+          option.textContent = sec;
           sectionSelect.appendChild(option);
         });
-      } else {
-        sectionSelect.disabled = true;
-        employeeSelect.disabled = true;
-        empnoInput.disabled = true;
+        sectionSelect.disabled = false;
       }
-    }
+    });
 
-    function updateEmployees() {
-      const department = document.getElementById('department').value;
-      const section = document.getElementById('section').value;
-      const employeeSelect = document.getElementById('employee');
-      const empnoInput = document.getElementById('empno');
-      employeeSelect.innerHTML = '<option value="">-- 名前を選択 --</option>';
+    sectionSelect.addEventListener('change', function() {
+      const selectedDepartment = departmentSelect.value;
+      const selectedSection = this.value;
+      employeeSelect.innerHTML = '<option value="">-- 名前を選択してください --</option>';
       empnoInput.value = '';
+      employeeSelect.disabled = true;
       empnoInput.disabled = true;
-      if (department && section && organizationData[department] && organizationData[department][section]) {
-        employeeSelect.disabled = false;
-        organizationData[department][section].forEach(name => {
+      loginButton.disabled = true;
+      loginError.innerText = '';
+
+      if (selectedDepartment && selectedSection && companyData[selectedDepartment][selectedSection]) {
+        const employees = companyData[selectedDepartment][selectedSection];
+        employees.forEach(emp => {
           const option = document.createElement('option');
-          option.value = name;
-          option.textContent = name;
+          option.value = emp;
+          option.textContent = emp;
           employeeSelect.appendChild(option);
         });
-      } else {
-        employeeSelect.disabled = true;
+        employeeSelect.disabled = false;
       }
-    }
+    });
 
-    function enableEmpNo() {
-      const employee = document.getElementById('employee').value;
-      const empnoInput = document.getElementById('empno');
-      if (employee) {
-        empnoInput.disabled = false;
-      } else {
-        empnoInput.disabled = true;
-        empnoInput.value = '';
-      }
-    }
+    employeeSelect.addEventListener('change', function() {
+      empnoInput.disabled = !this.value;
+      empnoInput.value = '';
+      loginButton.disabled = true;
+      loginError.innerText = '';
+    });
+
+    empnoInput.addEventListener('input', function() {
+      loginButton.disabled = !this.value.trim();
+    });
 
     function login() {
-      const empno = document.getElementById('empno').value.trim();
-      const empName = document.getElementById('employee').value;
-      const loginError = document.getElementById('login-error');
-      if (!empName || !empno) {
-        loginError.textContent = '部署、課、名前を選択し、社員番号を入力してください。';
+      const selectedEmployeeName = employeeSelect.value;
+      const empno = empnoInput.value.trim();
+
+      if (!selectedEmployeeName || !empno) {
+        loginError.innerText = "名前と社員番号を入力してください";
         return;
       }
+      
       currentEmpNo = empno;
-      currentEmpName = empName;
+      currentEmpName = selectedEmployeeName;
       showStampArea();
     }
 
     function logout() {
-      currentEmpNo = "";
-      currentEmpName = "";
-      // QRリーダーがあれば停止
-      if (qrReader && typeof qrReader.stop === "function") {
-        qrReader.stop().catch(err => {});
+      // QRリーダーの停止
+      if (qrReader && qrReader.getState() === 2) {
+        qrReader.stop().catch(err => console.error("QRリーダー停止エラー:", err));
       }
       qrReader = null;
       qrProcessing = false;
+      
+      // グローバル変数のリセット
+      currentEmpNo = "";
+      currentEmpName = "";
+      
+      // フォームのリセット
+      departmentSelect.value = "";
+      sectionSelect.innerHTML = '<option value="">-- 課を選択してください --</option>';
+      employeeSelect.innerHTML = '<option value="">-- 名前を選択してください --</option>';
+      empnoInput.value = '';
+      sectionSelect.disabled = true;
+      employeeSelect.disabled = true;
+      empnoInput.disabled = true;
+      loginButton.disabled = true;
+      
       showLoginArea();
-      initializeDepartments();
     }
 
     function showLoginArea() {
       document.getElementById("login-area").classList.remove("hidden");
-      document.getElementById("admin-login-area").classList.add("hidden");
       document.getElementById("stamp-area").classList.add("hidden");
       document.getElementById("admin-area").classList.add("hidden");
-      document.getElementById('login-error').textContent = '';
-      // QRリーダーがあれば停止
-      if (qrReader && typeof qrReader.stop === "function") {
-        qrReader.stop().catch(err => {});
-      }
-      qrReader = null;
-      qrProcessing = false;
-    }
-
-    function showAdminLogin() {
-      document.getElementById("login-area").classList.add("hidden");
-      document.getElementById("admin-login-area").classList.remove("hidden");
-      document.getElementById('admin-login-error').textContent = '';
-      document.getElementById('admin-pass').value = '';
+      document.getElementById("admin-pass").value = "";
+      loginError.innerText = "";
+      adminLoginError.innerText = "";
     }
 
     function showStampArea() {
+      currentEmpNo = currentEmpNo;
+      currentEmpName = currentEmpName;
+      document.getElementById("current-empno").innerText = currentEmpNo;
+      document.getElementById("current-empname").innerText = currentEmpName;
       document.getElementById("login-area").classList.add("hidden");
-      document.getElementById("admin-login-area").classList.add("hidden");
       document.getElementById("stamp-area").classList.remove("hidden");
       document.getElementById("admin-area").classList.add("hidden");
-      document.getElementById("user-greeting").textContent = `${currentEmpName}さん、お疲れ様です！`;
-      document.getElementById("stamp-message").innerHTML = "";
+      document.getElementById("result").innerHTML = "";
       document.getElementById("roulette-area").innerHTML = "";
       document.getElementById("qr-reader").classList.add("hidden");
       updateStampButtons();
       renderHistory();
     }
 
-    // 今日の日付を取得（YYYY-MM-DD形式）
+    // 今日の日付を取得
     function getTodayDate() {
       const now = new Date();
       return now.toISOString().split('T')[0];
@@ -376,288 +584,425 @@
     function hasPunchedToday(type) {
       if (!historyData[currentEmpNo]) return false;
       const today = getTodayDate();
-      return historyData[currentEmpNo].some(h =>
+      return historyData[currentEmpNo].some(h => 
         h.type === type && h.date.startsWith(today)
       );
     }
 
     // 打刻ボタンの状態を更新
     function updateStampButtons() {
-      const punchInBtn = document.getElementById("punch-in");
-      const punchOutBtn = document.getElementById("punch-out");
-      punchInBtn.disabled = hasPunchedToday("出勤");
-      punchOutBtn.disabled = hasPunchedToday("退勤");
-      punchInBtn.textContent = punchInBtn.disabled ? "出勤済み" : "出勤";
-      punchOutBtn.textContent = punchOutBtn.disabled ? "退勤済み" : "退勤";
+      const punchInBtn = document.getElementById("punch-in-btn");
+      const punchOutBtn = document.getElementById("punch-out-btn");
+      
+      const inPunched = hasPunchedToday("出勤");
+      const outPunched = hasPunchedToday("退勤");
+      
+      punchInBtn.disabled = inPunched;
+      punchOutBtn.disabled = outPunched;
+      
+      punchInBtn.textContent = inPunched ? "出勤済み" : "出勤";
+      punchOutBtn.textContent = outPunched ? "退勤済み" : "退勤";
     }
 
-    // 出勤処理
-    function punchIn() {
-      if (hasPunchedToday("出勤")) {
-        alert("本日はすでに出勤済みです。");
-        return;
-      }
-      currentPunchType = "出勤";
-      startQrReader("出勤");
-    }
-
-    // 退勤処理
-    function punchOut() {
-      if (hasPunchedToday("退勤")) {
-        alert("本日はすでに退勤済みです。");
-        return;
-      }
-      currentPunchType = "退勤";
-      startQrReader("退勤");
-    }
-
-    // --- QRコードカメラ読取機能 ---
+    // --- 打刻関連処理 ---
     function startQrReader(type) {
-      // 既存リーダー停止
-      if (qrReader) {
-        try { qrReader.clear(); } catch(e) {}
+      if (hasPunchedToday(type)) {
+        alert(`本日はすでに${type}済みです。`);
+        return;
       }
-      qrProcessing = false;
-      document.getElementById("qr-reader").classList.remove("hidden");
+      
+      punchType = type;
+      document.getElementById("result").innerHTML = "";
       document.getElementById("roulette-area").innerHTML = "";
-      document.getElementById("stamp-message").innerHTML = '<span style="color:#0072bc;">QRコードを読み取っています...</span>';
+      document.getElementById("qr-reader").classList.remove("hidden");
+      
+      if (qrReader) {
+        qrReader.clear().catch(err => console.error("QRリーダーclearエラー:", err));
+      }
+      
       qrReader = new Html5Qrcode("qr-reader");
+      qrProcessing = false;
+
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
       qrReader.start(
         { facingMode: "environment" },
-        {
-          fps: 30, // フレームレートUP（精度・速度向上）
-          qrbox: { width: 300, height: 300 }, // 検出範囲UP
-          aspectRatio: 1.0, // 正方形に近い
-          disableFlip: false // インカメラ対応
-        },
+        config,
         qrCodeMessage => {
           if (qrProcessing) return;
           qrProcessing = true;
-          document.getElementById("stamp-message").innerHTML = `<span style="color:#0072bc;">位置情報を取得しています...</span>`;
-          processQrResult(qrCodeMessage, type);
-          qrReader.stop().then(() => {
-            document.getElementById("qr-reader").classList.add("hidden");
-            qrProcessing = false;
-          }).catch(() => {
-            document.getElementById("qr-reader").classList.add("hidden");
-            qrProcessing = false;
-          });
+          
+          // QRコードの検証
+          if (!qrCodeMessage || qrCodeMessage.trim() !== "kaory-entrance") {
+            document.getElementById("result").innerHTML = `<span style="color:red;">無効なQRコードです。</span>`;
+            stopQrReaderAfterError();
+            return;
+          }
+          
+          document.getElementById("result").innerHTML = `<span style="color:#0072bc;">位置情報を取得しています...</span>`;
+          
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              addHistory(currentEmpNo, punchType, qrCodeMessage, new Date(), position.coords, navigator.userAgent);
+              document.getElementById("result").innerHTML = `<span style="color:green;">${punchType}打刻しました</span>`;
+              stopQrReaderAndShowRoulette();
+            },
+            function(error) {
+              addHistory(currentEmpNo, punchType, qrCodeMessage, new Date(), null, navigator.userAgent);
+              document.getElementById("result").innerHTML = `<span style="color:orange;">${punchType}打刻しました（位置情報なし）</span>`;
+              stopQrReaderAndShowRoulette();
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
         },
         errorMessage => {
-          // 読み取り失敗時にユーザーへ表示（デバッグ用）
-          //document.getElementById("stamp-message").innerHTML = `<span style="color:red;">${errorMessage}</span>`;
+          // 読み取りエラーは無視
         }
       ).catch(err => {
-        document.getElementById("stamp-message").innerHTML = `<span style="color:red;">カメラが起動できませんでした。許可を確認してください。</span>`;
+        console.error("QRリーダー開始エラー:", err);
+        document.getElementById("result").innerHTML = `<span style="color:red;">カメラの起動に失敗しました。許可を確認してください。</span>`;
         document.getElementById("qr-reader").classList.add("hidden");
         qrProcessing = false;
       });
     }
-    // QR読取後の打刻処理
-    function processQrResult(qrCodeMessage, type) {
-      if (!qrCodeMessage || qrCodeMessage.trim() !== "kaory-entrance") {
-        document.getElementById("stamp-message").innerHTML = `<span style="color:red;">無効なQRコードです。</span>`;
-        return;
-      }
-      // 位置情報取得
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            recordPunch(type, lat, lng);
-          },
-          err => {
-            document.getElementById("stamp-message").innerHTML = `<span style="color:red;">位置情報が取得できませんでした。</span>`;
-          }
-        );
-      } else {
-        document.getElementById("stamp-message").innerHTML = `<span style="color:red;">位置情報非対応ブラウザです。</span>`;
+
+    function stopQrReaderAfterError() {
+      if (qrReader && qrReader.getState() === 2) {
+        qrReader.stop()
+          .then(() => {
+            document.getElementById("qr-reader").classList.add("hidden");
+            qrProcessing = false;
+          })
+          .catch(err => {
+            console.error("QRリーダー停止エラー:", err);
+            document.getElementById("qr-reader").classList.add("hidden");
+            qrProcessing = false;
+          });
       }
     }
 
-    // 打刻記録
-    function recordPunch(type, lat, lng) {
-      const now = new Date();
-      const dateStr = now.toLocaleString('ja-JP', { hour12: false });
-      if (!historyData[currentEmpNo]) historyData[currentEmpNo] = [];
-      historyData[currentEmpNo].push({
+    function stopQrReaderAndShowRoulette() {
+      if (qrReader && qrReader.getState() === 2) {
+        qrReader.stop()
+          .then(() => {
+            document.getElementById("qr-reader").classList.add("hidden");
+            qrProcessing = false;
+            showRoulette();
+            updateStampButtons();
+          })
+          .catch(err => {
+            console.error("QRリーダー停止エラー:", err);
+            document.getElementById("qr-reader").classList.add("hidden");
+            qrProcessing = false;
+            showRoulette();
+            updateStampButtons();
+          });
+      } else {
+        document.getElementById("qr-reader").classList.add("hidden");
+        qrProcessing = false;
+        showRoulette();
+        updateStampButtons();
+      }
+    }
+
+    function showRoulette() {
+      const rouletteDiv = document.getElementById("roulette-area");
+      rouletteDiv.innerHTML = '<span style="color:#0072bc;">ルーレット中...</span>';
+      setTimeout(() => {
+        const isWin = Math.random() < 0.5;
+        if (isWin) {
+          rouletteDiv.innerHTML = `<div class="roulette-win">
+            🎉当たり！ジュース一本無料！🎉<br>
+            <span style="font-size:1em;">スクショを撮って総務部へ提示してね！</span>
+          </div>`;
+        } else {
+          rouletteDiv.innerHTML = `<div class="roulette-lose">
+            はずれ～また挑戦してね！<br>
+            本日もお疲れ様です！
+          </div>`;
+        }
+      }, 900);
+    }
+
+    // --- 履歴関連処理 ---
+    function addHistory(empno, type, qr, date, coords, device) {
+      if (!historyData[empno]) {
+        historyData[empno] = [];
+      }
+      const entry = {
+        id: Date.now() + Math.random(),
+        empno: empno,
+        empname: currentEmpName,
         type,
-        date: now.toISOString(),
-        dispDate: dateStr,
-        lat,
-        lng
-      });
-      document.getElementById("stamp-message").innerHTML = `<span style="color:#28a745;">${type}打刻が完了しました。</span>`;
-      showRoulette(type); // ルーレットを必ず表示
-      updateStampButtons();
+        qr,
+        date: date.toISOString(),
+        lat: coords ? coords.latitude : null,
+        lng: coords ? coords.longitude : null,
+        device: device || ""
+      };
+      historyData[empno].unshift(entry);
+      
+      if (historyData[empno].length > 100) {
+        historyData[empno] = historyData[empno].slice(0, 100);
+      }
+      
       renderHistory();
     }
 
-    // ルーレット表示
-    function showRoulette(type) {
-      const rouletteArea = document.getElementById("roulette-area");
-      rouletteArea.innerHTML = ""; // 前の表示を消す
-      const isWin = Math.random() < 0.1; // 10%で当たり
-      if (isWin) {
-        rouletteArea.innerHTML = `<div class="roulette-win">🎉 おめでとう！${type}ガチャ大当たり！<br>本日のラッキー賞！</div>`;
-      } else {
-        rouletteArea.innerHTML = `<div class="roulette-lose">本日もお仕事お疲れ様です！</div>`;
-      }
-    }
-
-    // 履歴表示
     function renderHistory() {
       const historyDiv = document.getElementById("history");
-      historyDiv.innerHTML = "<h3>本日の打刻履歴</h3>";
-      const today = getTodayDate();
-      const logs = (historyData[currentEmpNo] || []).filter(h => h.date.startsWith(today));
-      if (logs.length === 0) {
-        historyDiv.innerHTML += "<div>本日の打刻はありません。</div>";
-        return;
+      let history = historyData[currentEmpNo] || [];
+      
+      // 3日前の日付を計算
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      threeDaysAgo.setHours(0, 0, 0, 0);
+      
+      // 3日以内の履歴のみフィルタリング
+      const recentHistory = history.filter(h => {
+        const historyDate = new Date(h.date);
+        return historyDate >= threeDaysAgo;
+      });
+      
+      let html = "<b>打刻履歴（直近3日間）</b><br>";
+      if (recentHistory.length === 0) {
+        html += "<span style='color:#888;'>履歴がありません</span>";
+      } else {
+        recentHistory.forEach((h, i) => {
+          const dateObj = new Date(h.date);
+          const formattedDate = dateObj.toLocaleString('ja-JP');
+          html += `<div class="history-entry">
+            [${formattedDate}]<br>
+            種別: <b>${escapeHtml(h.type)}</b><br>
+            ${h.lat && h.lng ? `位置: <a href="https://www.google.com/maps?q=${h.lat},${h.lng}" target="_blank">${h.lat.toFixed(5)},${h.lng.toFixed(5)}</a>` : "位置: なし"}
+          </div>`;
+        });
       }
-      logs.forEach(h => {
-        historyDiv.innerHTML += `<div class="history-entry">${h.dispDate}：${h.type}（位置情報: ${h.lat.toFixed(4)}, ${h.lng.toFixed(4)}）</div>`;
+      historyDiv.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return "";
+      return str.replace(/[&<>"'`]/g, function(match) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '`': '&#x60;'
+        })[match];
       });
     }
 
-    // 管理者ログイン
-    function adminLogin() {
-      const pass = document.getElementById('admin-pass').value;
-      const adminError = document.getElementById('admin-login-error');
-      if (pass === "kaoryadmin") { // 管理者パスワード
-        isAdminLoggedIn = true;
-        showAdminArea();
-      } else {
-        adminError.textContent = "パスワードが違います。";
-      }
-    }
-
-    function adminLogout() {
-      isAdminLoggedIn = false;
-      showLoginArea();
-    }
-
-    function showAdminArea() {
-      document.getElementById("login-area").classList.add("hidden");
-      document.getElementById("admin-login-area").classList.add("hidden");
-      document.getElementById("stamp-area").classList.add("hidden");
-      document.getElementById("admin-area").classList.remove("hidden");
-      renderChangeRequests();
-      renderAdminHistory();
-    }
-
-    // 変更依頼フォーム表示
+    // --- 変更依頼関連処理 ---
     function showChangeRequestForm() {
       document.getElementById("change-request-form").classList.remove("hidden");
-      // 依頼可能な打刻種別をセット
-      const reqTypeSel = document.getElementById("request-type");
-      reqTypeSel.innerHTML = '<option value="">-- 選択してください --</option>';
-      const today = getTodayDate();
-      const logs = (historyData[currentEmpNo] || []).filter(h => h.date.startsWith(today));
-      logs.forEach(h => {
-        reqTypeSel.innerHTML += `<option value="${h.type}">${h.type}（${h.dispDate}）</option>`;
+      
+      const selectType = document.getElementById("request-type");
+      selectType.innerHTML = '<option value="">-- 選択してください --</option>';
+      
+      const history = historyData[currentEmpNo] || [];
+      
+      // 3日前の日付を計算
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      threeDaysAgo.setHours(0, 0, 0, 0);
+      
+      // 3日以内の履歴のみ
+      const recentHistory = history.filter(h => {
+        const historyDate = new Date(h.date);
+        return historyDate >= threeDaysAgo;
       });
-      document.getElementById("request-time").value = "";
-      document.getElementById("request-reason").value = "";
-      document.getElementById("request-message").textContent = "";
+      
+      recentHistory.forEach(h => {
+        const dateObj = new Date(h.date);
+        const option = document.createElement('option');
+        option.value = h.id;
+        option.textContent = `${dateObj.toLocaleString('ja-JP')} - ${h.type}`;
+        selectType.appendChild(option);
+      });
+      
+      document.getElementById("request-time").value = '';
+      document.getElementById("request-reason").value = '';
+      document.getElementById("request-message").textContent = '';
     }
 
     function hideChangeRequestForm() {
       document.getElementById("change-request-form").classList.add("hidden");
     }
 
-    // 変更依頼送信
     function submitChangeRequest() {
-      const type = document.getElementById("request-type").value;
-      const newTime = document.getElementById("request-time").value;
-      const reason = document.getElementById("request-reason").value.trim();
-      const reqMsg = document.getElementById("request-message");
-      if (!type || !newTime || !reason) {
-        reqMsg.textContent = "全て入力してください。";
-        reqMsg.style.color = "#dc3545";
+      const requestType = document.getElementById("request-type").value;
+      const requestTime = document.getElementById("request-time").value;
+      const requestReason = document.getElementById("request-reason").value.trim();
+      
+      if (!requestType || !requestTime || !requestReason) {
+        alert("すべての項目を入力してください。");
         return;
       }
-      changeRequests.push({
-        empNo: currentEmpNo,
-        empName: currentEmpName,
-        type,
-        newTime,
-        reason,
-        status: "pending"
-      });
-      reqMsg.textContent = "変更依頼を送信しました。";
-      reqMsg.style.color = "#28a745";
-      setTimeout(hideChangeRequestForm, 1000);
+      
+      const history = historyData[currentEmpNo] || [];
+      const targetHistory = history.find(h => h.id == requestType);
+      
+      if (!targetHistory) {
+        alert("対象の打刻が見つかりません。");
+        return;
+      }
+      
+      const request = {
+        id: Date.now() + Math.random(),
+        empno: currentEmpNo,
+        empname: currentEmpName,
+        originalHistory: targetHistory,
+        newTime: requestTime,
+        reason: requestReason,
+        status: "pending",
+        requestDate: new Date().toISOString()
+      };
+      
+      changeRequests.push(request);
+      
+      document.getElementById("request-message").textContent = "変更依頼を送信しました。管理者の承認をお待ちください。";
+      
+      setTimeout(() => {
+        hideChangeRequestForm();
+      }, 2000);
     }
 
-    // 管理者：変更依頼一覧表示
+    // --- 管理者関連処理 ---
+    function adminLogin() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === "1") {
+        showAdminArea();
+      } else {
+        adminLoginError.innerText = "パスワードが違います";
+      }
+    }
+
+    function showAdminArea() {
+      document.getElementById("login-area").classList.add("hidden");
+      document.getElementById("stamp-area").classList.add("hidden");
+      document.getElementById("admin-area").classList.remove("hidden");
+      renderAdminHistory();
+      renderChangeRequests();
+      
+      if (qrReader && qrReader.getState() === 2) {
+        qrReader.stop().catch(err => console.error("QRリーダー停止エラー(Admin):", err));
+      }
+      qrReader = null;
+      qrProcessing = false;
+    }
+
+    function adminLogout() {
+      showLoginArea();
+    }
+
     function renderChangeRequests() {
-      const reqListDiv = document.getElementById("requests-list");
-      reqListDiv.innerHTML = "";
-      if (changeRequests.length === 0) {
-        reqListDiv.innerHTML = "<div>変更依頼はありません。</div>";
+      const requestsList = document.getElementById("requests-list");
+      const pendingRequests = changeRequests.filter(r => r.status === "pending");
+      
+      if (pendingRequests.length === 0) {
+        requestsList.innerHTML = "<span style='color:#888;'>変更依頼はありません</span>";
         return;
       }
-      changeRequests.forEach((req, idx) => {
-        let statusClass = "request-pending";
-        if (req.status === "approved") statusClass = "request-approved";
-        if (req.status === "rejected") statusClass = "request-rejected";
-        reqListDiv.innerHTML +=
-          `<div class="request-item ${statusClass}">
-            <b>${req.empName}</b>（${req.empNo}）<br>
-            <b>${req.type}</b>の時刻を
-            <b>${new Date(req.newTime).toLocaleString('ja-JP')}</b>に変更希望<br>
-            理由: ${req.reason}<br>
-            <span>ステータス: ${req.status === "pending" ? "承認待ち" : req.status === "approved" ? "承認" : "却下"}</span><br>
-            ${req.status === "pending" ?
-              `<button class="approve-btn" onclick="approveRequest(${idx})">承認</button>
-               <button class="reject-btn" onclick="rejectRequest(${idx})">却下</button>` : ""}
-          </div>`;
+      
+      let html = "";
+      pendingRequests.forEach(request => {
+        const originalDate = new Date(request.originalHistory.date);
+        const newDate = new Date(request.newTime);
+        
+        html += `<div class="request-item request-pending">
+          <b>${request.empname} (${request.empno})</b><br>
+          変更対象: ${request.originalHistory.type}<br>
+          現在の時刻: ${originalDate.toLocaleString('ja-JP')}<br>
+          変更後の時刻: ${newDate.toLocaleString('ja-JP')}<br>
+          理由: ${escapeHtml(request.reason)}<br>
+          申請日時: ${new Date(request.requestDate).toLocaleString('ja-JP')}<br>
+          <button class="approve-btn" onclick="approveRequest('${request.id}')">承認</button>
+          <button class="reject-btn" onclick="rejectRequest('${request.id}')">却下</button>
+        </div>`;
       });
+      
+      requestsList.innerHTML = html;
     }
 
-    // 管理者：依頼承認
-    function approveRequest(idx) {
-      const req = changeRequests[idx];
-      req.status = "approved";
-      // 履歴を修正
-      if (historyData[req.empNo]) {
-        const today = getTodayDate();
-        const log = historyData[req.empNo].find(h => h.type === req.type && h.date.startsWith(today));
-        if (log) {
-          log.date = new Date(req.newTime).toISOString();
-          log.dispDate = new Date(req.newTime).toLocaleString('ja-JP', { hour12: false });
+    function approveRequest(requestId) {
+      const request = changeRequests.find(r => r.id == requestId);
+      if (!request) return;
+      
+      const history = historyData[request.empno];
+      if (history) {
+        const targetIndex = history.findIndex(h => h.id === request.originalHistory.id);
+        if (targetIndex !== -1) {
+          history[targetIndex].date = new Date(request.newTime).toISOString();
+          history[targetIndex].edited = true;
+          history[targetIndex].editReason = request.reason;
         }
       }
+      
+      request.status = "approved";
+      
+      alert("変更依頼を承認しました。");
       renderChangeRequests();
       renderAdminHistory();
     }
 
-    // 管理者：依頼却下
-    function rejectRequest(idx) {
-      changeRequests[idx].status = "rejected";
+    function rejectRequest(requestId) {
+      const request = changeRequests.find(r => r.id == requestId);
+      if (!request) return;
+      
+      request.status = "rejected";
+      
+      alert("変更依頼を却下しました。");
       renderChangeRequests();
     }
 
-    // 管理者：全打刻履歴
     function renderAdminHistory() {
-      const div = document.getElementById("admin-history");
-      div.innerHTML = "<h3>全社員の本日打刻履歴</h3>";
-      const today = getTodayDate();
-      let found = false;
-      Object.keys(historyData).forEach(empNo => {
-        const logs = historyData[empNo].filter(h => h.date.startsWith(today));
-        if (logs.length > 0) {
-          found = true;
-          div.innerHTML += `<div style="margin-bottom:8px;"><b>${empNo}</b>：<br>`;
-          logs.forEach(h => {
-            div.innerHTML += `　${h.dispDate}：${h.type}（位置情報: ${h.lat.toFixed(4)}, ${h.lng.toFixed(4)}）<br>`;
-          });
-          div.innerHTML += `</div>`;
-        }
+      let html = "<h3>全社員の打刻履歴（全期間）</h3>";
+      let allHistoryEntries = [];
+
+      Object.keys(historyData).forEach(empno => {
+        historyData[empno].forEach(entry => {
+          allHistoryEntries.push(entry);
+        });
       });
-      if (!found) div.innerHTML += "<div>本日の打刻履歴はありません。</div>";
+
+      allHistoryEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (allHistoryEntries.length === 0) {
+        html += "<span style='color:#888;'>まだ履歴がありません</span>";
+      } else {
+        html += `<table class="admin-history-table">
+          <thead>
+            <tr>
+              <th>社員番号</th>
+              <th>名前</th>
+              <th>日時</th>
+              <th>種別</th>
+              <th>位置</th>
+            </tr>
+          </thead>
+          <tbody>
+        `;
+        allHistoryEntries.forEach(h => {
+          const dateObj = new Date(h.date);
+          const formattedDate = dateObj.toLocaleString('ja-JP');
+          html += `<tr>
+            <td>${escapeHtml(h.empno)}</td>
+            <td>${escapeHtml(h.empname)}</td>
+            <td>${escapeHtml(formattedDate)}${h.edited ? ' [編集済]' : ''}</td>
+            <td>${escapeHtml(h.type)}</td>
+            <td>${h.lat && h.lng ? `<a href="https://www.google.com/maps?q=${h.lat},${h.lng}" target="_blank">地図</a>` : "なし"}</td>
+          </tr>`;
+        });
+        html += "</tbody></table>";
+      }
+      document.getElementById("admin-history").innerHTML = html;
     }
   </script>
 </body>
