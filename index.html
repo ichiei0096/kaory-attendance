@@ -987,6 +987,12 @@ function saveStamp(history, type) {
   const histories = getAllHistories();
   histories.push(history);
   setAllHistories(histories);
+
+  // Firestoreに履歴を保存
+  db.collection('attendanceHistories').add(history)
+    .then(() => console.log('打刻履歴をFirestoreに保存しました'))
+    .catch(error => console.error('Firestore保存エラー:', error));
+
   playStampAudio();
   if (type === "out") {
     showReportModal(history);
@@ -1104,54 +1110,70 @@ function clearAllHistories() {
 
 // 1日1人1行の形式で履歴を表示（勤務時間列追加）
 function renderAdminHistory(filtered) {
-  const histories = (filtered!==undefined ? filtered : getAllHistories());
-  const grouped = groupHistoriesByDateAndEmployee(histories);
-  
-  let html = `<table class="admin-history-table" border="1" cellspacing="0" cellpadding="0">
-    <thead>
-      <tr>
-        <th>日付</th>
-        <th>部署</th>
-        <th>課</th>
-        <th>社員番号</th>
-        <th>氏名</th>
-        <th>出勤時間</th>
-        <th>退勤時間</th>
-        <th>勤務時間</th>
-        <th>打刻位置</th>
-        <th>打刻端末</th>
-        <th>日報</th>
-      </tr>
-    </thead>
-    <tbody>
-  `;
-  
-  for (const entry of grouped) {
-    const workingHours = calculateWorkingHours(entry.inTime, entry.outTime);
-    const locationDisplay = entry.location ? 
-      `<span class="location-ellipsis" onclick="showLocationModal('${escapeHtml(entry.location)}')">${escapeHtml(entry.location.substring(0,10))}...</span>` : "";
-    const deviceDisplay = entry.device ? 
-      `<span class="device-ellipsis" onclick="showDeviceModal('${escapeHtml(entry.device)}')">${escapeHtml(entry.device.substring(0,15))}...</span>` : "";
-    const reportDisplay = entry.report ? 
-      `<span class="report-ellipsis" onclick="showReportModalAdmin('${escapeHtml(entry.report)}')">${escapeHtml(entry.report.substring(0,20))}...</span>` : "";
-    
-    html += `<tr>
-      <td>${escapeHtml(entry.date)}</td>
-      <td>${escapeHtml(entry.dep)}</td>
-      <td>${escapeHtml(entry.sec)}</td>
-      <td>${escapeHtml(entry.empno)}</td>
-      <td>${escapeHtml(entry.name)}</td>
-      <td>${escapeHtml(entry.inTime || "-")}</td>
-      <td>${escapeHtml(entry.outTime || "-")}</td>
-      <td style="font-weight:bold; color:${workingHours !== '-' && !workingHours.startsWith('0') ? '#1976d2' : '#666'}; text-align:center;">${escapeHtml(workingHours)}</td>
-      <td>${locationDisplay}</td>
-      <td>${deviceDisplay}</td>
-      <td style="white-space:pre-line;">${reportDisplay}</td>
-    </tr>`;
+  if (filtered !== undefined) {
+    const grouped = groupHistoriesByDateAndEmployee(filtered);
+    renderTable(grouped);
+    return;
   }
-  html += "</tbody></table>";
-  document.getElementById("admin-history").innerHTML = html;
+
+  db.collection('attendanceHistories').get()
+    .then(snapshot => {
+      const histories = [];
+      snapshot.forEach(doc => histories.push(doc.data()));
+      const grouped = groupHistoriesByDateAndEmployee(histories);
+      renderTable(grouped);
+    })
+    .catch(error => console.error('Firestore取得エラー:', error));
+
+  function renderTable(grouped) {
+    let html = `<table class="admin-history-table" border="1" cellspacing="0" cellpadding="0">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>部署</th>
+          <th>課</th>
+          <th>社員番号</th>
+          <th>氏名</th>
+          <th>出勤時間</th>
+          <th>退勤時間</th>
+          <th>勤務時間</th>
+          <th>打刻位置</th>
+          <th>打刻端末</th>
+          <th>日報</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+    
+    for (const entry of grouped) {
+      const workingHours = calculateWorkingHours(entry.inTime, entry.outTime);
+      const locationDisplay = entry.location ? 
+        `<span class="location-ellipsis" onclick="showLocationModal('${escapeHtml(entry.location)}')">${escapeHtml(entry.location.substring(0,10))}...</span>` : "";
+      const deviceDisplay = entry.device ? 
+        `<span class="device-ellipsis" onclick="showDeviceModal('${escapeHtml(entry.device)}')">${escapeHtml(entry.device.substring(0,15))}...</span>` : "";
+      const reportDisplay = entry.report ? 
+        `<span class="report-ellipsis" onclick="showReportModalAdmin('${escapeHtml(entry.report)}')">${escapeHtml(entry.report.substring(0,20))}...</span>` : "";
+      
+      html += `<tr>
+        <td>${escapeHtml(entry.date)}</td>
+        <td>${escapeHtml(entry.dep)}</td>
+        <td>${escapeHtml(entry.sec)}</td>
+        <td>${escapeHtml(entry.empno)}</td>
+        <td>${escapeHtml(entry.name)}</td>
+        <td>${escapeHtml(entry.inTime || "-")}</td>
+        <td>${escapeHtml(entry.outTime || "-")}</td>
+        <td style="font-weight:bold; color:${workingHours !== '-' && !workingHours.startsWith('0') ? '#1976d2' : '#666'}; text-align:center;">${escapeHtml(workingHours)}</td>
+        <td>${locationDisplay}</td>
+        <td>${deviceDisplay}</td>
+        <td style="white-space:pre-line;">${reportDisplay}</td>
+      </tr>`;
+    }
+    html += "</tbody></table>";
+    document.getElementById("admin-history").innerHTML = html;
+  }
 }
+
+
 
 // 日付と社員でグループ化する関数
 function groupHistoriesByDateAndEmployee(histories) {
@@ -1459,7 +1481,7 @@ function openManualModal() {
       </div>
       <div style="margin-top:7px;">対象日付: <input type="date" id="manual-date" value="${getTodayString()}"></div>
       <div style="margin-top:7px;">時刻: <input type="time" id="manual-time" value="${getTimeString(new Date())}"></div>
-      <div style="margin-top:7px;">日報:<br><textarea id="manual-report" rows="2" maxlength="300" style="width:100%;"></textarea></div>
+      <div style="margin-top:7px;">日報（任意）:<br><textarea id="manual-report" rows="2" maxlength="300" style="width:100%;"></textarea></div>
       <div style="margin-top:12px;">
         <button type="submit" class="btn" style="padding:7px 18px;font-size:1em;">申請</button>
       </div>
