@@ -3,14 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <title>KAORY</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=1024">
+  <!-- Noto Sans JP VariableFont（Google Fonts） -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&amp;display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', 'Meiryo', sans-serif; background: #f2f6fa; margin: 0; padding: 0; }
-    header { background: #0072bc; color: #fff; padding: 18px 10px 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    body {
+      font-family: 'Noto Sans JP', 'Segoe UI', 'Meiryo', sans-serif;
+      background: #f2f6fa; margin: 0; padding: 0;
+    }
+    header {
+      background: #0072bc; color: #fff;
+      padding: 18px 10px 12px 10px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
     .main-title { font-size: 2em; font-weight: bold; letter-spacing: 0.1em; margin-bottom: 6px; }
     .subtitle { font-size: 1.05em; opacity: 0.92; letter-spacing: 0.04em; }
-    main { max-width: 480px; margin: 32px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.06); padding: 24px 18px 32px 18px; }
+    main {
+      max-width: 480px; margin: 32px auto;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      padding: 24px 18px 32px 18px;
+    }
     #result { font-size: 1.2em; margin: 12px 0; min-height: 1.8em; }
     #roulette-area { margin: 12px 0 0 0; min-height: 3em; }
     #history { margin-top: 24px; background: #f8f8f8; border-radius: 8px; padding: 16px; font-size: 0.98em; word-break: break-all; }
@@ -31,6 +48,8 @@
     .out-btn:hover { background: #c62828; }
     .logout-btn { background: #999; color: #fff; border: none; border-radius: 5px; padding: 7px 18px; font-size: 1em; margin-top: 10px; cursor: pointer; }
     .logout-btn:hover { background: #666; }
+    .manual-btn { background: #ff9800; color: #fff; border: none; border-radius: 5px; padding: 7px 18px; font-size: 1em; margin-top: 10px; cursor: pointer; margin-left: 10px;}
+    .manual-btn:hover { background: #e65100; }
     .roulette-win {
       color: #fff !important;
       background: linear-gradient(45deg, #FFD700, #FFA500);
@@ -53,35 +72,90 @@
       border-radius: 10px;
       margin-top: 5px;
       text-align: center;
-      animation: loseShake 0.8s ease-in-out;
       text-shadow: 2px 2px 4px #1e3c6d, 0 0 8px #000;
     }
     @keyframes winPulse { 0% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); } 50% { transform: scale(1.05); box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6); } 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); } }
-    @keyframes loseShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-    .roulette-spinning { animation: spin 0.1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    #admin-area { margin-top: 24px; }
-    .admin-search-area { background: #e9f3fa; border-radius: 8px; padding: 18px 15px 10px 15px; margin-bottom: 18px; }
-    .admin-search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+
+    /* --- 管理者画面の左寄せ修正 --- */
+    #admin-area {
+      margin-top: 24px;
+      max-width: 1800px;
+      margin-left: 20px;
+      margin-right: auto;
+      width: 95vw;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
+    }
+    .admin-title-center {
+      text-align: left;
+      margin-bottom: 18px;
+      width: 100%;
+    }
+    .admin-search-area {
+      background: #e9f3fa;
+      border-radius: 8px;
+      padding: 18px 15px 10px 15px;
+      margin-bottom: 18px;
+      width: 100%;
+      max-width: 1660px;
+      margin-left: 0;
+      margin-right: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .admin-search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; justify-content: flex-start;}
     .admin-search-row label { min-width: 68px; font-weight: bold; }
     .admin-search-row input[type="date"] { min-width: 140px; }
     .admin-search-row select { min-width: 120px; }
     .admin-search-row .multi-select { min-width: 160px; }
-    .admin-history-table { width: 100%; border-collapse: collapse; font-size: 0.98em; margin-top: 10px; table-layout: fixed; }
-    .admin-history-table th, .admin-history-table td { border: 1px solid #b2cbe4; padding: 6px 4px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .admin-history-table th { background: #e9f3fa; }
-    .admin-history-table tr:nth-child(even) { background: #f7fafc; }
+    .admin-history-table, .admin-requests-table {
+      width: 100%;
+      max-width: 1700px;
+      font-size: 1.09em;
+      table-layout: fixed;
+      margin-left: 0;
+      margin-right: auto;
+      margin-bottom: 18px;
+    }
+    .admin-history-table th, .admin-history-table td,
+    .admin-requests-table th, .admin-requests-table td {
+      padding: 8px 6px;
+      white-space: pre-line;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+    /* 勤務時間列追加により列幅調整 */
+    .admin-history-table th:nth-child(1), .admin-history-table td:nth-child(1) { min-width: 120px; width: 120px; } /* 日付 */
+    .admin-history-table th:nth-child(2), .admin-history-table td:nth-child(2) { min-width: 90px; width: 90px; } /* 部署 */
+    .admin-history-table th:nth-child(3), .admin-history-table td:nth-child(3) { min-width: 110px; width: 110px; } /* 課 */
+    .admin-history-table th:nth-child(4), .admin-history-table td:nth-child(4) { min-width: 70px; width: 70px; } /* 社員番号 */
+    .admin-history-table th:nth-child(5), .admin-history-table td:nth-child(5) { min-width: 110px; width: 110px; } /* 氏名 */
+    .admin-history-table th:nth-child(6), .admin-history-table td:nth-child(6) { min-width: 70px; width: 70px; } /* 出勤時間 */
+    .admin-history-table th:nth-child(7), .admin-history-table td:nth-child(7) { min-width: 70px; width: 70px; } /* 退勤時間 */
+    .admin-history-table th:nth-child(8), .admin-history-table td:nth-child(8) { min-width: 80px; width: 80px; font-weight: bold; color: #1976d2; } /* 勤務時間 */
+    .admin-history-table th:nth-child(9), .admin-history-table td:nth-child(9) { min-width: 130px; width: 130px; } /* 打刻位置 */
+    .admin-history-table th:nth-child(10), .admin-history-table td:nth-child(10) { min-width: 130px; width: 130px; } /* 打刻端末 */
+    .admin-history-table th:nth-child(11), .admin-history-table td:nth-child(11) { min-width: 180px; width: 180px; white-space: pre-line; } /* 日報 */
+    .admin-requests-table {
+      width: 100%;
+      max-width: 1700px;
+      margin: 0 0 18px 0;
+    }
     .admin-logout-btn { background: #c62828; color: #fff; border: none; border-radius: 5px; padding: 7px 18px; font-size: 1em; margin-top: 10px; cursor: pointer; }
     .admin-logout-btn:hover { background: #a31515; }
     .admin-clear-btn { background: #f44336; color: #fff; border: none; border-radius: 5px; padding: 7px 18px; font-size: 1em; margin-top: 10px; cursor: pointer; margin-left: 10px;}
     .admin-clear-btn:hover { background: #b71c1c; }
+    .admin-csv-btn, .admin-pdf-btn { background: #1976d2; color: #fff; border: none; border-radius: 5px; padding: 7px 18px; font-size: 1em; margin-top: 10px; cursor: pointer; margin-left: 10px;}
+    .admin-csv-btn:hover, .admin-pdf-btn:hover { background: #0d47a1; }
     .change-request-form, .change-report-form { background: #fff9c4; border: 1px solid #ffe082; border-radius: 6px; padding: 10px; margin: 10px 0; }
     .change-request-form label, .change-report-form label { display: block; margin-bottom: 4px; }
-    .change-request-form input, .change-request-form textarea, .change-report-form input, .change-report-form textarea { width: 100%; margin-bottom: 7px; }
-    .admin-requests-table { width: 100%; border-collapse: collapse; font-size: 0.98em; margin-top: 10px; }
-    .admin-requests-table th, .admin-requests-table td { border: 1px solid #b2cbe4; padding: 6px 4px; text-align: left; }
-    .admin-requests-table th { background: #ffe082; }
-    .admin-requests-table tr:nth-child(even) { background: #fffde7; }
+    .change-request-form input, .change-report-form textarea, .change-report-form input, .change-report-form textarea { width: 100%; margin-bottom: 7px; }
     .admin-approve-btn, .admin-reject-btn { border: none; border-radius: 3px; padding: 4px 10px; font-size: 1em; margin-right: 7px; cursor: pointer; }
     .admin-approve-btn { background: #4caf50; color: #fff; }
     .admin-reject-btn { background: #f44336; color: #fff; }
@@ -92,8 +166,39 @@
     .modal-content { background:#fff; border-radius:8px; padding:24px; min-width:280px; max-width:90vw; max-height:80vh; box-shadow:0 8px 32px rgba(0,0,0,0.25); overflow: auto; }
     .modal-close { float:right; font-size:1.2em; color:#888; cursor:pointer; margin-left:10px;}
     .hidden { display: none !important; }
+    /* QRリーダーカスタム枠 */
+    #qr-reader {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      margin: 0 auto;
+      background: #222;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #qr-canvas-frame {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    /* 日報入力・手動打刻・修正申請モーダル用 */
+    #report-modal-bg, #manual-modal-bg, #fix-modal-bg {
+      position: fixed; top:0; left:0; width:100vw; height:100vh;
+      background:rgba(0,0,0,0.35); z-index:2000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #report-modal-content, #manual-modal-content, #fix-modal-content {
+      background:#fff; border-radius:8px; padding:24px;
+      min-width:280px; max-width:90vw; max-height:80vh;
+      box-shadow:0 8px 32px rgba(0,0,0,0.25); overflow: auto;
+    }
+    #report-modal-close, #manual-modal-close, #fix-modal-close {
+      float:right; font-size:1.2em; color:#888; cursor:pointer; margin-left:10px;
+    }
     @media (max-width: 900px) {
       .admin-history-table th, .admin-history-table td { font-size: 0.92em; padding: 4px 2px; }
+      .admin-search-area, .admin-requests-table, .admin-history-table { width: 99vw; max-width: 99vw; min-width: unset;}
     }
     @media (max-width: 600px) {
       main { margin: 12px 3px; padding: 12px 3vw 16px 3vw; }
@@ -104,11 +209,9 @@
       .admin-requests-table th, .admin-requests-table td { font-size: 0.92em; padding: 4px 2px; }
       .admin-search-row {flex-direction: column; align-items: flex-start;}
       .admin-search-row label {margin-bottom: 3px;}
+      #admin-area { max-width: 99vw; }
+      .admin-history-table { width: 99vw; max-width: 99vw; }
     }
-    /* 日報入力モーダル用 */
-    #report-modal-bg { position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:2000; display: flex; align-items: center; justify-content: center; }
-    #report-modal-content { background:#fff; border-radius:8px; padding:24px; min-width:280px; max-width:90vw; max-height:80vh; box-shadow:0 8px 32px rgba(0,0,0,0.25); overflow: auto; }
-    #report-modal-close { float:right; font-size:1.2em; color:#888; cursor:pointer; margin-left:10px;}
   </style>
 </head>
 <body>
@@ -163,7 +266,10 @@
     <div id="stamp-area" class="hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h2 style="margin:0;">出退勤打刻</h2>
-        <button class="logout-btn" id="logout-btn">ログアウト</button>
+        <div>
+          <button class="logout-btn" id="logout-btn">ログアウト</button>
+          <button class="manual-btn" id="manual-btn">手動入力申請</button>
+        </div>
       </div>
       <div style="margin-bottom:10px;">
         <b>社員番号：</b><span id="current-empno"></span><br>
@@ -175,15 +281,19 @@
       </div>
       <div id="result"></div>
       <div id="roulette-area"></div>
-      <div id="qr-reader" class="hidden" style="margin-top:14px;"></div>
+      <div id="qr-reader" class="hidden" style="margin-top:14px; position:relative;">
+        <canvas id="qr-canvas-frame" width="320" height="320"></canvas>
+      </div>
       <div id="history"></div>
     </div>
     <!-- 管理者画面 -->
     <div id="admin-area" class="hidden">
-      <h2 style="margin-top:0;">管理者用：全体出退勤履歴</h2>
-      <div style="margin-bottom:10px;">
+      <h2 class="admin-title-center" style="margin-top:0;">管理者用：全体出退勤履歴</h2>
+      <div style="margin-bottom:10px; text-align:left;">
         <button class="admin-logout-btn" id="admin-logout-btn">管理者ログアウト</button>
         <button class="admin-clear-btn" id="admin-clear-btn">履歴全消去</button>
+        <button class="admin-csv-btn" id="admin-csv-btn">CSV出力</button>
+        <button class="admin-pdf-btn" id="admin-pdf-btn">PDF出力</button>
       </div>
       <!-- 検索フォーム -->
       <div class="admin-search-area">
@@ -206,9 +316,9 @@
           <button class="btn" id="admin-search-reset-btn" type="button" style="background:#bbb;color:#222;padding:8px 18px; font-size:1em;">リセット</button>
         </div>
       </div>
-      <div id="admin-history"></div>
-      <h3 style="margin-top:30px;">時刻・日報変更申請一覧</h3>
-      <div id="admin-requests"></div>
+      <div id="admin-history" style="width:100%;display:flex;justify-content:flex-start;"></div>
+      <h3 class="admin-title-center" style="margin-top:30px;">時刻・日報・手動打刻申請一覧</h3>
+      <div id="admin-requests" style="width:100%;display:flex;justify-content:flex-start;"></div>
     </div>
   </main>
   <div id="modal-bg" class="modal-bg hidden" onclick="closeModal(event)">
@@ -224,980 +334,1271 @@
       <div id="report-modal-inner"></div>
     </div>
   </div>
-  <script>
-    // --- ここからJS ---
-    // 組織データ（省略なし、略）
-    const organizationData = {
-      "製造部": {
-        "製造課": [
-          { empno: "001", name: "小坂 敏文" },
-          { empno: "002", name: "片山 雄司" },
-          { empno: "003", name: "豊田 崇聖" },
-          { empno: "004", name: "岡 大成" },
-          { empno: "005", name: "河本 卓哉" },
-          { empno: "006", name: "岩田 一平" },
-          { empno: "007", name: "藤永 武志" },
-          { empno: "008", name: "鞠 龍成" },
-          { empno: "009", name: "福浪 智弘" },
-          { empno: "010", name: "豊田 柾希" },
-          { empno: "011", name: "ハオ" },
-          { empno: "012", name: "ソン" },
-          { empno: "013", name: "チュック" },
-          { empno: "014", name: "ゴアン" },
-          { empno: "015", name: "清家 翼" },
-          { empno: "016", name: "小川 晃大" },
-          { empno: "017", name: "吉永 輝也" },
-          { empno: "018", name: "タイン" },
-          { empno: "019", name: "末留 瑞規" },
-          { empno: "020", name: "ホアン" },
-          { empno: "021", name: "クアン" },
-          { empno: "022", name: "ヴ―" },
-          { empno: "023", name: "ティン" }
-        ],
-        "溶接課": [
-          { empno: "024", name: "藤原 秀一" },
-          { empno: "025", name: "樋上 雅彦" },
-          { empno: "026", name: "余 二奎" },
-          { empno: "027", name: "黒木 真人" },
-          { empno: "028", name: "藤田 晋也" },
-          { empno: "029", name: "デロス" },
-          { empno: "030", name: "松川 哲也" },
-          { empno: "031", name: "髙橋 淳" },
-          { empno: "032", name: "ブオン" }
-        ],
-        "技術支援課": [
-          { empno: "033", name: "久津間 剛" }
-        ],
-        "ロボットオペレーション課": [
-          { empno: "034", name: "桑田 大輔" }
-        ],
-        "レーザーシアリング課": [
-          { empno: "035", name: "奥江 亮輔" },
-          { empno: "036", name: "奥江 起矢" },
-          { empno: "037", name: "小林 華代" },
-          { empno: "038", name: "東森 健太" },
-          { empno: "039", name: "後藤 一也" },
-          { empno: "040", name: "門田 信子" },
-          { empno: "041", name: "大出 あかね" }
-        ],
-        "Ｈ形鋼機械加工課": [
-          { empno: "042", name: "萩原 正展" },
-          { empno: "043", name: "小田 裕惟" },
-          { empno: "044", name: "三谷 敏夫" },
-          { empno: "045", name: "林 司" },
-          { empno: "046", name: "小田 武士" },
-          { empno: "047", name: "座賀白 洋一" },
-          { empno: "048", name: "竹原 聖也" },
-          { empno: "049", name: "高本 朋典" },
-          { empno: "050", name: "高橋 亜実" }
-        ]
-      },
-      "工務部": {
-        "設計課": [
-          { empno: "051", name: "貞清 俊一" },
-          { empno: "052", name: "藤井 敦仁" },
-          { empno: "053", name: "畑本 泰宏" },
-          { empno: "054", name: "林 珊珊" },
-          { empno: "055", name: "武本 礼" },
-          { empno: "056", name: "今川 聖佳" },
-          { empno: "057", name: "前川 彩香" },
-          { empno: "058", name: "広江 将和" }
-        ],
-        "配送課": [
-          { empno: "059", name: "今村 仁" },
-          { empno: "060", name: "乃美 崇一郎" },
-          { empno: "061", name: "坂本 大和" },
-          { empno: "062", name: "岡原 由洋" },
-          { empno: "063", name: "芝 賢二" }
-        ],
-        "工事課": [
-          { empno: "064", name: "石井 勇也" },
-          { empno: "065", name: "未吉 将志" }
-        ]
-      },
-      "総務部": {
-        "総務課": [
-          { empno: "066", name: "河原 明音" },
-          { empno: "067", name: "青木 優花" },
-          { empno: "068", name: "楢崎 明彦" }
-        ]
-      }
+  <!-- 手動打刻申請用モーダル -->
+  <div id="manual-modal-bg" class="modal-bg hidden" onclick="closeManualModal(event)">
+    <div id="manual-modal-content" onclick="event.stopPropagation();">
+      <span id="manual-modal-close" onclick="closeManualModal(event)">&times;</span>
+      <div id="manual-modal-inner"></div>
+    </div>
+  </div>
+  <!-- 打刻修正申請用モーダル -->
+  <div id="fix-modal-bg" class="modal-bg hidden" onclick="closeFixModal(event)">
+    <div id="fix-modal-content" onclick="event.stopPropagation();">
+      <span id="fix-modal-close" onclick="closeFixModal(event)">&times;</span>
+      <div id="fix-modal-inner"></div>
+    </div>
+  </div>
+<script>
+// ------------------------------
+// 組織データ（絶対に改変なし・全量そのまま）
+// ------------------------------
+const organizationData = {
+  "製造部": {
+    "製造課": [
+      { empno: "001", name: "小坂 敏文" },
+      { empno: "002", name: "片山 雄司" },
+      { empno: "003", name: "豊田 崇聖" },
+      { empno: "004", name: "岡 大成" },
+      { empno: "005", name: "河本 卓哉" },
+      { empno: "006", name: "岩田 一平" },
+      { empno: "007", name: "藤永 武志" },
+      { empno: "008", name: "鞠 龍成" },
+      { empno: "009", name: "福浪 智弘" },
+      { empno: "010", name: "豊田 柾希" },
+      { empno: "011", name: "ハオ" },
+      { empno: "012", name: "ソン" },
+      { empno: "013", name: "チュック" },
+      { empno: "014", name: "ゴアン" },
+      { empno: "015", name: "清家 翼" },
+      { empno: "016", name: "小川 晃大" },
+      { empno: "017", name: "吉永 輝也" },
+      { empno: "018", name: "タイン" },
+      { empno: "019", name: "末留 瑞規" },
+      { empno: "020", name: "ホアン" },
+      { empno: "021", name: "クアン" },
+      { empno: "022", name: "ヴ―" },
+      { empno: "023", name: "ティン" }
+    ],
+    "溶接課": [
+      { empno: "024", name: "藤原 秀一" },
+      { empno: "025", name: "樋上 雅彦" },
+      { empno: "026", name: "余 二奎" },
+      { empno: "027", name: "黒木 真人" },
+      { empno: "028", name: "藤田 晋也" },
+      { empno: "029", name: "デロス" },
+      { empno: "030", name: "松川 哲也" },
+      { empno: "031", name: "髙橋 淳" },
+      { empno: "032", name: "ブオン" }
+    ],
+    "技術支援課": [
+      { empno: "033", name: "久津間 剛" }
+    ],
+    "ロボットオペレーション課": [
+      { empno: "034", name: "桑田 大輔" }
+    ],
+    "レーザーシアリング課": [
+      { empno: "035", name: "奥江 亮輔" },
+      { empno: "036", name: "奥江 起矢" },
+      { empno: "037", name: "小林 華代" },
+      { empno: "038", name: "東森 健太" },
+      { empno: "039", name: "後藤 一也" },
+      { empno: "040", name: "門田 信子" },
+      { empno: "041", name: "大出 あかね" }
+    ],
+    "Ｈ形鋼機械加工課": [
+      { empno: "042", name: "萩原 正展" },
+      { empno: "043", name: "小田 裕惟" },
+      { empno: "044", name: "三谷 敏夫" },
+      { empno: "045", name: "林 司" },
+      { empno: "046", name: "小田 武士" },
+      { empno: "047", name: "座賀白 洋一" },
+      { empno: "048", name: "竹原 聖也" },
+      { empno: "049", name: "高本 朋典" },
+      { empno: "050", name: "高橋 亜実" }
+    ]
+  },
+  "工務部": {
+    "設計課": [
+      { empno: "051", name: "貞清 俊一" },
+      { empno: "052", name: "藤井 敦仁" },
+      { empno: "053", name: "畑本 泰宏" },
+      { empno: "054", name: "林 珊珊" },
+      { empno: "055", name: "武本 礼" },
+      { empno: "056", name: "今川 聖佳" },
+      { empno: "057", name: "前川 彩香" },
+      { empno: "058", name: "広江 将和" }
+    ],
+    "配送課": [
+      { empno: "059", name: "今村 仁" },
+      { empno: "060", name: "乃美 崇一郎" },
+      { empno: "061", name: "坂本 大和" },
+      { empno: "062", name: "岡原 由洋" },
+      { empno: "063", name: "芝 賢二" }
+    ],
+    "工事課": [
+      { empno: "064", name: "石井 勇也" },
+      { empno: "065", name: "未吉 将志" }
+    ]
+  },
+  "総務部": {
+    "総務課": [
+      { empno: "066", name: "河原 明音" },
+      { empno: "067", name: "青木 優花" },
+      { empno: "068", name: "楢崎 明彦" }
+    ]
+  }
+};
+
+// ------------------------------
+// ユーティリティ
+// ------------------------------
+function escapeHtml(str) {
+  if (!str || typeof str !== 'string') return str || '';
+  return str.replace(/[&<>"']/g, function(m) {
+    return ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m];
+  });
+}
+
+function getTodayString() {
+  return "2025-07-25";
+}
+
+function getDateString(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  return d.toISOString().slice(0,10);
+}
+
+function getTimeString(date) {
+  const d = new Date(date);
+  return d.toTimeString().slice(0,5);
+}
+
+function pad(num) { 
+  return num < 10 ? '0'+num : num; 
+}
+
+function getDateTimeString(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ------------------------------
+// 勤務時間計算関数（休憩1時間差し引き、小数点表示）
+// ------------------------------
+function calculateWorkingHours(inTime, outTime) {
+  if (!inTime || !outTime || inTime === "-" || outTime === "-") {
+    return "-";
+  }
+  
+  try {
+    const parseTime = (timeStr) => {
+      const cleanTime = timeStr.replace(/\(.*?\)/g, '').trim();
+      const [hours, minutes] = cleanTime.split(':').map(Number);
+      return hours * 60 + minutes;
     };
-
-    // 検索用データ
-    let adminSearchFilters = {
-      dateFrom: "",
-      dateTo: "",
-      sections: [],
-      employees: []
-    };
-
-    // グローバル変数
-    let currentEmpNo = "";
-    let currentEmpName = "";
-    let qrReader = null;
-    let qrProcessing = false;
-    let punchType = "";
-    let adminAllRowsCache = []; // 全履歴キャッシュ
-
-    // 日報入力用一時変数
-    let tempReportCallback = null;
-
-    // イベントバインドと初期化
-    document.addEventListener("DOMContentLoaded", function() {
-      initializeDepartments();
-      setupAdminSearchUI();
-
-      document.getElementById('department').addEventListener('change', updateSections);
-      document.getElementById('section').addEventListener('change', updateEmployees);
-      document.getElementById('login-btn').addEventListener('click', login);
-      document.getElementById('admin-login-btn').addEventListener('click', adminLogin);
-      document.getElementById('logout-btn').addEventListener('click', logout);
-      document.getElementById('in-btn').addEventListener('click', () => startQrReader('出勤'));
-      document.getElementById('out-btn').addEventListener('click', () => startQrReader('退勤'));
-      document.getElementById('admin-logout-btn').addEventListener('click', adminLogout);
-      document.getElementById('admin-clear-btn').addEventListener('click', clearAllHistories);
-
-      document.getElementById('admin-search-btn').addEventListener('click', function() {
-        updateAdminSearchFiltersFromUI();
-        renderAdminHistory();
-      });
-      document.getElementById('admin-search-reset-btn').addEventListener('click', function() {
-        resetAdminSearchFilters();
-        renderAdminHistory();
-      });
-      document.getElementById('search-sections').addEventListener('change', updateAdminSearchEmployees);
-
-      if (sessionStorage.getItem("admin") === "1") {
-        showAdminArea();
-        return;
-      }
-      const empno = sessionStorage.getItem("empno");
-      const empname = sessionStorage.getItem("empname");
-      if(empno && empname) {
-        showStampArea(empno, empname);
-      } else {
-        showLoginArea();
-      }
-    });
-
-    // 管理者検索UI初期化
-    function setupAdminSearchUI() {
-      let sectionSelect = document.getElementById('search-sections');
-      sectionSelect.innerHTML = "";
-      let allSections = [];
-      Object.keys(organizationData).forEach(dept => {
-        Object.keys(organizationData[dept]).forEach(section => {
-          allSections.push({dept, section});
-        });
-      });
-      allSections.forEach(({dept, section}) => {
-        const opt = document.createElement('option');
-        opt.value = section;
-        opt.textContent = `${dept} - ${section}`;
-        sectionSelect.appendChild(opt);
-      });
-      updateAdminSearchEmployees();
+    
+    const inMinutes = parseTime(inTime);
+    const outMinutes = parseTime(outTime);
+    
+    let workMinutes = outMinutes - inMinutes;
+    workMinutes -= 60;
+    
+    if (workMinutes <= 0) {
+      return "0.0時間";
     }
-    function updateAdminSearchEmployees() {
-      let selectedSections = Array.from(document.getElementById('search-sections').selectedOptions).map(o=>o.value);
-      let employeeSelect = document.getElementById('search-employees');
-      employeeSelect.innerHTML = "";
-      let employees = [];
-      Object.keys(organizationData).forEach(dept => {
-        Object.keys(organizationData[dept]).forEach(section => {
-          if (selectedSections.length === 0 || selectedSections.includes(section)) {
-            organizationData[dept][section].forEach(emp => {
-              employees.push({empno: emp.empno, name: emp.name, section, dept});
-            });
-          }
-        });
-      });
-      employees.sort((a,b)=>a.empno.localeCompare(b.empno));
-      employees.forEach(emp => {
-        const opt = document.createElement('option');
-        opt.value = emp.empno;
-        opt.textContent = `${emp.name}（${emp.dept}-${emp.section}）`;
-        employeeSelect.appendChild(opt);
-      });
-    }
-    function updateAdminSearchFiltersFromUI() {
-      adminSearchFilters.dateFrom = document.getElementById('search-date-from').value;
-      adminSearchFilters.dateTo = document.getElementById('search-date-to').value;
-      adminSearchFilters.sections = Array.from(document.getElementById('search-sections').selectedOptions).map(o=>o.value);
-      adminSearchFilters.employees = Array.from(document.getElementById('search-employees').selectedOptions).map(o=>o.value);
-    }
-    function resetAdminSearchFilters() {
-      document.getElementById('search-date-from').value = "";
-      document.getElementById('search-date-to').value = "";
-      document.getElementById('search-sections').selectedIndex = -1;
-      updateAdminSearchEmployees();
-      document.getElementById('search-employees').selectedIndex = -1;
-      adminSearchFilters = {dateFrom:"",dateTo:"",sections:[],employees:[]};
-    }
+    
+    const workHours = (workMinutes / 60).toFixed(1);
+    return `${workHours}時間`;
+    
+  } catch (error) {
+    return "-";
+  }
+}
 
-    function initializeDepartments() {
-      const departmentSelect = document.getElementById('department');
-      departmentSelect.innerHTML = '<option value="">-- 部署を選択 --</option>';
-      Object.keys(organizationData).forEach(dept => {
+// ------------------------------
+// 端末番号取得関数
+// ------------------------------
+function getDeviceInfo() {
+  const userAgent = navigator.userAgent;
+  let deviceInfo = "不明";
+  
+  if (/iPhone/.test(userAgent)) {
+    deviceInfo = "iPhone";
+  } else if (/iPad/.test(userAgent)) {
+    deviceInfo = "iPad";
+  } else if (/Android/.test(userAgent)) {
+    deviceInfo = "Android";
+  } else if (/Windows/.test(userAgent)) {
+    deviceInfo = "Windows";
+  } else if (/Mac/.test(userAgent)) {
+    deviceInfo = "Mac";
+  }
+  
+  const screenInfo = `${screen.width}x${screen.height}`;
+  const timestamp = Date.now();
+  return `${deviceInfo}_${screenInfo}_${timestamp}`;
+}
+
+// ------------------------------
+// ローカルストレージ
+// ------------------------------
+function getAllHistories() {
+  return JSON.parse(localStorage.getItem("histories") || "[]");
+}
+
+function setAllHistories(histories) {
+  localStorage.setItem("histories", JSON.stringify(histories));
+}
+
+function getAllRequests() {
+  return JSON.parse(localStorage.getItem("requests") || "[]");
+}
+
+function setAllRequests(requests) {
+  localStorage.setItem("requests", JSON.stringify(requests));
+}
+
+function getSession() {
+  return JSON.parse(sessionStorage.getItem("session") || "null");
+}
+
+function setSession(obj) {
+  sessionStorage.setItem("session", JSON.stringify(obj));
+}
+
+function clearSession() {
+  sessionStorage.removeItem("session");
+}
+
+// ------------------------------
+// 初期化（完全に修正版）
+// ------------------------------
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("DOM読み込み完了");
+  
+  // 組織データの確認
+  console.log("組織データ確認:", organizationData);
+  
+  // 部署選択肢の初期化
+  initializeDepartments();
+  
+  // イベントリスナー設定
+  setupEventListeners();
+  
+  // セッション復帰
+  const session = getSession();
+  if (session && session.type === "user") {
+    showStampArea(session);
+  } else if (session && session.type === "admin") {
+    showAdminArea();
+  } else {
+    showLoginArea();
+  }
+  
+  console.log("初期化処理完了");
+});
+
+function setupEventListeners() {
+  document.getElementById("login-btn").addEventListener("click", login);
+  document.getElementById("logout-btn").addEventListener("click", logout);
+  document.getElementById("manual-btn").addEventListener("click", openManualModal);
+  document.getElementById("admin-login-btn").addEventListener("click", adminLogin);
+  document.getElementById("admin-logout-btn").addEventListener("click", adminLogout);
+  document.getElementById("admin-clear-btn").addEventListener("click", clearAllHistories);
+  document.getElementById("admin-csv-btn").addEventListener("click", adminExportCSV);
+  document.getElementById("admin-pdf-btn").addEventListener("click", adminExportPDF);
+  document.getElementById("admin-search-btn").addEventListener("click", adminSearch);
+  document.getElementById("admin-search-reset-btn").addEventListener("click", adminSearchReset);
+  document.getElementById("department").addEventListener("change", onDepartmentChange);
+  document.getElementById("section").addEventListener("change", onSectionChange);
+  document.getElementById("in-btn").addEventListener("click", function() {
+    const session = getSession();
+    const today = getTodayString();
+    const histories = getAllHistories().filter(h =>
+      h.empno === session.empno && h.date === today && !h.manual);
+    const stampedIn = histories.find(h => h.type === "in");
+    if (stampedIn) {
+      showResult("本日はすでに出勤打刻済みです。", false);
+      alert("本日はすでに出勤打刻済みです。");
+      updateStampButtons();
+      return;
+    }
+    doStamp("in");
+  });
+  document.getElementById("out-btn").addEventListener("click", function() {
+    const session = getSession();
+    const today = getTodayString();
+    const histories = getAllHistories().filter(h =>
+      h.empno === session.empno && h.date === today && !h.manual);
+    const stampedIn = histories.find(h => h.type === "in");
+    const stampedOut = histories.find(h => h.type === "out");
+    if (!stampedIn) {
+      showResult("本日は出勤打刻がありません。出勤打刻後に退勤してください。", false);
+      alert("本日は出勤打刻がありません。出勤打刻後に退勤してください。");
+      updateStampButtons();
+      return;
+    }
+    if (stampedOut) {
+      showResult("本日はすでに退勤打刻済みです。", false);
+      alert("本日はすでに退勤打刻済みです。");
+      updateStampButtons();
+      return;
+    }
+    doStamp("out");
+  });
+}
+
+// ------------------------------
+// ログイン関連関数（完全修正版）
+// ------------------------------
+function initializeDepartments() {
+  console.log("initializeDepartments開始");
+  
+  const depSel = document.getElementById("department");
+  if (!depSel) {
+    console.error("部署セレクトボックスが見つかりません");
+    return;
+  }
+  
+  // セレクトボックスをクリア
+  depSel.innerHTML = '<option value="">-- 部署を選択 --</option>';
+  
+  // 組織データから部署を追加
+  try {
+    for (const dep in organizationData) {
+      console.log("部署追加:", dep);
+      const option = document.createElement('option');
+      option.value = dep;
+      option.textContent = dep;
+      depSel.appendChild(option);
+    }
+  } catch (e) {
+    console.error("部署オプション追加エラー:", e);
+  }
+  
+  // 課と社員の初期化
+  resetSectionSelect();
+  resetEmployeeSelect();
+  
+  console.log("部署選択肢数:", depSel.options.length);
+}
+
+function resetSectionSelect() {
+  const secSel = document.getElementById("section");
+  if (secSel) {
+    secSel.innerHTML = '<option value="">-- 課を選択 --</option>';
+    secSel.disabled = true;
+  }
+}
+
+function resetEmployeeSelect() {
+  const empSel = document.getElementById("employee");
+  if (empSel) {
+    empSel.innerHTML = '<option value="">-- 名前を選択 --</option>';
+    empSel.disabled = true;
+  }
+}
+
+function onDepartmentChange() {
+  console.log("部署変更イベント");
+  const dep = document.getElementById("department").value;
+  console.log("選択された部署:", dep);
+  
+  const secSel = document.getElementById("section");
+  if (!secSel) {
+    console.error("課セレクトボックスが見つかりません");
+    return;
+  }
+  
+  // 課選択肢をクリア
+  secSel.innerHTML = '<option value="">-- 課を選択 --</option>';
+  
+  if (dep && organizationData[dep]) {
+    try {
+      for (const sec in organizationData[dep]) {
+        console.log("課追加:", sec);
         const option = document.createElement('option');
-        option.value = dept;
-        option.textContent = dept;
-        departmentSelect.appendChild(option);
-      });
-      document.getElementById('section').innerHTML = '<option value="">-- 課を選択 --</option>';
-      document.getElementById('section').disabled = true;
-      document.getElementById('employee').innerHTML = '<option value="">-- 名前を選択 --</option>';
-      document.getElementById('employee').disabled = true;
-    }
-
-    function updateSections() {
-      const department = document.getElementById('department').value;
-      const sectionSelect = document.getElementById('section');
-      const employeeSelect = document.getElementById('employee');
-      sectionSelect.innerHTML = '<option value="">-- 課を選択 --</option>';
-      employeeSelect.innerHTML = '<option value="">-- 名前を選択 --</option>';
-      employeeSelect.disabled = true;
-      if (department && organizationData[department]) {
-        sectionSelect.disabled = false;
-        Object.keys(organizationData[department]).forEach(section => {
-          const option = document.createElement('option');
-          option.value = section;
-          option.textContent = section;
-          sectionSelect.appendChild(option);
-        });
-      } else {
-        sectionSelect.disabled = true;
+        option.value = sec;
+        option.textContent = sec;
+        secSel.appendChild(option);
       }
+      secSel.disabled = false;
+    } catch (e) {
+      console.error("課オプション追加エラー:", e);
     }
+  } else {
+    secSel.disabled = true;
+  }
+  
+  resetEmployeeSelect();
+  console.log("課選択肢数:", secSel.options.length);
+}
 
-    function updateEmployees() {
-      const department = document.getElementById('department').value;
-      const section = document.getElementById('section').value;
-      const employeeSelect = document.getElementById('employee');
-      employeeSelect.innerHTML = '<option value="">-- 名前を選択 --</option>';
-      if (department && section && organizationData[department] && organizationData[department][section]) {
-        employeeSelect.disabled = false;
-        organizationData[department][section].forEach(emp => {
-          const option = document.createElement('option');
-          option.value = emp.empno;
-          option.textContent = emp.name;
-          employeeSelect.appendChild(option);
-        });
-      } else {
-        employeeSelect.disabled = true;
+function onSectionChange() {
+  console.log("課変更イベント");
+  const dep = document.getElementById("department").value;
+  const sec = document.getElementById("section").value;
+  console.log("選択された課:", sec);
+  
+  const empSel = document.getElementById("employee");
+  if (!empSel) {
+    console.error("社員セレクトボックスが見つかりません");
+    return;
+  }
+  
+  // 社員選択肢をクリア
+  empSel.innerHTML = '<option value="">-- 名前を選択 --</option>';
+  
+  if (dep && sec && organizationData[dep] && organizationData[dep][sec]) {
+    try {
+      for (const emp of organizationData[dep][sec]) {
+        console.log("社員追加:", emp.name);
+        const option = document.createElement('option');
+        option.value = emp.empno;
+        option.textContent = emp.name;
+        empSel.appendChild(option);
       }
+      empSel.disabled = false;
+    } catch (e) {
+      console.error("社員オプション追加エラー:", e);
     }
+  } else {
+    empSel.disabled = true;
+  }
+  
+  console.log("社員選択肢数:", empSel.options.length);
+}
 
-    function login() {
-      const department = document.getElementById('department').value;
-      const section = document.getElementById('section').value;
-      const empno = document.getElementById('employee').value;
-      const loginError = document.getElementById('login-error');
-      if (!department || !section || !empno) {
-        loginError.textContent = '部署、課、名前をすべて選択してください。';
-        return;
-      }
-      const empObj = organizationData[department][section].find(emp => emp.empno === empno);
-      if (empObj) {
-        sessionStorage.setItem("empno", empObj.empno);
-        sessionStorage.setItem("empname", empObj.name);
-        showStampArea(empObj.empno, empObj.name);
-      } else {
-        loginError.textContent = '選択内容が正しくありません。';
-      }
+function login() {
+  const dep = document.getElementById("department").value;
+  const sec = document.getElementById("section").value;
+  const empno = document.getElementById("employee").value;
+  let error = "";
+  
+  if (!dep) error = "部署を選択してください。";
+  else if (!sec) error = "課を選択してください。";
+  else if (!empno) error = "名前を選択してください。";
+  
+  if (error) {
+    document.getElementById("login-error").textContent = error;
+    return;
+  }
+  
+  let name = "";
+  for (const emp of organizationData[dep][sec]) {
+    if (emp.empno === empno) {
+      name = emp.name;
+      break;
     }
+  }
+  
+  setSession({type:"user", dep, sec, empno, name});
+  showStampArea({dep, sec, empno, name});
+}
 
-    function logout() {
-      sessionStorage.removeItem("empno");
-      sessionStorage.removeItem("empname");
-      showLoginArea();
+function logout() {
+  clearSession();
+  showLoginArea();
+}
+
+function showLoginArea() {
+  document.getElementById("login-area").classList.remove("hidden");
+  document.getElementById("stamp-area").classList.add("hidden");
+  document.getElementById("admin-area").classList.add("hidden");
+  document.getElementById("login-error").textContent = "";
+  document.getElementById("admin-login-error").textContent = "";
+  initializeDepartments();
+}
+// ------------------------------
+// 打刻画面
+// ------------------------------
+function showStampArea(session) {
+  document.getElementById("login-area").classList.add("hidden");
+  document.getElementById("stamp-area").classList.remove("hidden");
+  document.getElementById("admin-area").classList.add("hidden");
+  document.getElementById("current-empno").textContent = escapeHtml(session.empno);
+  document.getElementById("current-empname").textContent = escapeHtml(session.name);
+  updateStampButtons();
+  showUserHistory(session);
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("roulette-area").innerHTML = "";
+}
+
+// 出退勤ボタンの有効/無効
+function updateStampButtons() {
+  const session = getSession();
+  const today = getTodayString();
+  const histories = getAllHistories().filter(h =>
+    h.empno === session.empno && h.date === today && !h.manual);
+  const inBtn = document.getElementById("in-btn");
+  const outBtn = document.getElementById("out-btn");
+  const stampedIn = histories.find(h => h.type === "in");
+  const stampedOut = histories.find(h => h.type === "out");
+  inBtn.disabled = !!stampedIn;
+  outBtn.disabled = !stampedIn || !!stampedOut;
+}
+
+// --- 打刻履歴＋修正ボタン ---
+function showUserHistory(session) {
+  const histories = getAllHistories()
+    .filter(h => h.empno === session.empno)
+    .sort((a,b) => (b.datetime||b.timestamp) - (a.datetime||a.timestamp));
+  let html = "<b>直近3日分の履歴</b><br>";
+  const latestDates = Array.from(new Set(histories.map(h=>h.date))).slice(0,3);
+  for (const date of latestDates) {
+    html += `<div style="margin-top:6px;"><b>${escapeHtml(date)}</b><br>`;
+    const ins = histories.filter(h=>h.date===date && h.type==="in");
+    const outs = histories.filter(h=>h.date===date && h.type==="out");
+    html += "出勤: ";
+    if (ins.length) {
+      html += escapeHtml(ins[0].time) + (ins[0].manual ? "（手動）" : "");
+      html += ` <button class="change-time-btn" onclick="openFixModal('${ins[0].date}','in','${ins[0].time}')">打刻時間修正申請</button>`;
+    } else html += "-";
+    html += "<br>退勤: ";
+    if (outs.length) {
+      html += escapeHtml(outs[0].time) + (outs[0].manual ? "（手動）" : "");
+      html += ` <button class="change-time-btn" onclick="openFixModal('${outs[0].date}','out','${outs[0].time}')">打刻時間修正申請</button>`;
+    } else html += "-";
+    html += "<br>";
+    if (outs.length && outs[0].report) html += "日報: " + escapeHtml(outs[0].report) + "<br>";
+    html += "</div>";
+  }
+  document.getElementById("history").innerHTML = html;
+}
+
+// ------------------------------
+// 打刻処理
+// ------------------------------
+function doStamp(type) {
+  startQRReader(type);
+}
+
+// ------------------------------
+// QRリーダー（カスタム枠付き・色変化・高速化・仕様緩和）
+// ------------------------------
+let qrReader = null;
+let qrFrameStatus = "idle";
+let qrLastDetect = 0;
+
+function startQRReader(type) {
+  document.getElementById("qr-reader").classList.remove("hidden");
+  document.getElementById("result").textContent = "QRコードを読み取ってください...";
+  drawQRFrame("idle");
+  qrFrameStatus = "idle";
+  qrLastDetect = 0;
+  let frameTimer = setInterval(() => {
+    if (Date.now() - qrLastDetect < 200) {
+      drawQRFrame("detect");
+    } else {
+      drawQRFrame("idle");
     }
+  }, 60);
 
-    function showLoginArea() {
-      document.getElementById("login-area").classList.remove("hidden");
-      document.getElementById("stamp-area").classList.add("hidden");
-      document.getElementById("admin-area").classList.add("hidden");
-      document.getElementById('empno').value = "";
-      document.getElementById("login-error").innerText = "";
-      document.getElementById("admin-pass").value = "";
-      document.getElementById("admin-login-error").innerText = "";
-      document.getElementById("modal-bg").classList.add("hidden");
-      document.getElementById("report-modal-bg").classList.add("hidden");
-      initializeDepartments();
-    }
-
-    function showStampArea(empno, empname) {
-      currentEmpNo = empno;
-      currentEmpName = empname;
-      document.getElementById("current-empno").innerText = empno;
-      document.getElementById("current-empname").innerText = empname;
-      document.getElementById("login-area").classList.add("hidden");
-      document.getElementById("stamp-area").classList.remove("hidden");
-      document.getElementById("admin-area").classList.add("hidden");
-      document.getElementById("result").innerHTML = "";
-      document.getElementById("roulette-area").innerHTML = "";
-      document.getElementById("qr-reader").classList.add("hidden");
-      renderHistory();
-      document.getElementById("modal-bg").classList.add("hidden");
-      document.getElementById("report-modal-bg").classList.add("hidden");
-    }
-
-    // --- QRリーダー ---
-    function startQrReader(type) {
-      punchType = type;
-      document.getElementById("result").innerHTML = "";
-      document.getElementById("roulette-area").innerHTML = "";
-      document.getElementById("qr-reader").classList.remove("hidden");
-      if (qrReader) qrReader.clear();
-      qrReader = new Html5Qrcode("qr-reader");
-      qrProcessing = false;
-      qrReader.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        qrCodeMessage => {
-          if (qrProcessing) return;
-          qrProcessing = true;
-
-          // --- 1日1回制限チェック ---
-          let key = "kaory_history_" + currentEmpNo;
-          let history = JSON.parse(localStorage.getItem(key) || "[]");
-          let now = new Date();
-          let todayStr = now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-"+now.getDate().toString().padStart(2,"0");
-          let already = history.find(h=>{
-            let hDate = new Date(h.date);
-            let hStr = hDate.getFullYear()+"-"+(hDate.getMonth()+1).
-toString().padStart(2,"0")+"-"+hDate.getDate().toString().padStart(2,"0");
-            return h.type === punchType && hStr === todayStr;
-          });
-          if(already){
-            document.getElementById("result").innerHTML = `<span style="color:red;">本日はすでに${punchType}打刻済です</span>`;
-            qrReader.stop();
-            document.getElementById("qr-reader").classList.add("hidden");
-            qrProcessing = false;
-            return;
-          }
-
-          document.getElementById("result").innerHTML = `<span style="color:#0072bc;">位置情報を取得しています...</span>`;
-          navigator.geolocation.getCurrentPosition(
-            function(position) {
-              if (punchType === "退勤") {
-                // 退勤時は日報入力モーダル
-                showReportModal(function(reportText) {
-                  addHistory(currentEmpNo, currentEmpName, punchType, qrCodeMessage, new Date(), position.coords, getDeviceId(), reportText);
-                  document.getElementById("result").innerHTML = `<span style="color:green;">${punchType}打刻しました</span>`;
-                  qrReader.stop();
-                  document.getElementById("qr-reader").classList.add("hidden");
-                  qrProcessing = false;
-                  playStampSound();
-                  setTimeout(() => showRoulette(punchType), 1000);
-                });
-              } else {
-                addHistory(currentEmpNo, currentEmpName, punchType, qrCodeMessage, new Date(), position.coords, getDeviceId(), "");
-                document.getElementById("result").innerHTML = `<span style="color:green;">${punchType}打刻しました</span>`;
-                qrReader.stop();
-                document.getElementById("qr-reader").classList.add("hidden");
-                qrProcessing = false;
-                playStampSound();
-                setTimeout(() => showRoulette(punchType), 1000);
-              }
-            },
-            function(error) {
-              if (punchType === "退勤") {
-                showReportModal(function(reportText) {
-                  addHistory(currentEmpNo, currentEmpName, punchType, qrCodeMessage, new Date(), null, getDeviceId(), reportText);
-                  document.getElementById("result").innerHTML = `<span style="color:red;">位置情報エラー（${error.message}）</span>`;
-                  qrReader.stop();
-                  document.getElementById("qr-reader").classList.add("hidden");
-                  qrProcessing = false;
-                  playStampSound();
-                  setTimeout(() => showRoulette(punchType), 1000);
-                });
-              } else {
-                addHistory(currentEmpNo, currentEmpName, punchType, qrCodeMessage, new Date(), null, getDeviceId(), "");
-                document.getElementById("result").innerHTML = `<span style="color:red;">位置情報エラー（${error.message}）</span>`;
-                qrReader.stop();
-                document.getElementById("qr-reader").classList.add("hidden");
-                qrProcessing = false;
-                playStampSound();
-                setTimeout(() => showRoulette(punchType), 1000);
-              }
-            }
-          );
-        },
-        errorMessage => {}
-      );
-    }
-
-    function getDeviceId() {
-      let id = localStorage.getItem("kaory_device_id");
-      if (!id) {
-        id = "D-" + Math.random().toString(36).substr(2, 8);
-        localStorage.setItem("kaory_device_id", id);
-      }
-      return id;
-    }
-
-    function playStampSound() {
-      try {
-        const audio = document.getElementById('audio-stamp');
-        audio.currentTime = 0;
-        audio.play();
-      } catch(e) {}
-    }
-
-    function showRoulette(type) {
-      // 出勤・退勤どちらもルーレット
-      const rouletteDiv = document.getElementById("roulette-area");
-      rouletteDiv.innerHTML = '<span style="color:#0072bc;">ルーレット中...</span>';
-      setTimeout(() => {
-        const isWin = Math.random() < 0.09;
-        stopRouletteMedia();
-
-        if (isWin) {
-          rouletteDiv.innerHTML = `
-            <div class="roulette-win">
-              <video id="roulette-video-win" width="100%" style="border-radius:10px;max-width:320px;" autoplay playsinline loop muted></video>
-              <br>🎉当たり！ジュース一本無料！🎉<br>
-              <span style="font-size:1em;">スクショを撮って総務部へ提示してね！</span>
-            </div>
-          `;
-          setTimeout(() => {
-            const video = document.getElementById('roulette-video-win');
-            video.src = "2yBlj3kHxxedMcnHvk18R4dRRwf.mp4";
-            video.load();
-            video.play();
-            const audio = document.getElementById('audio-win');
-            audio.currentTime = 0;
-            audio.play();
-          }, 100);
-        } else {
-          rouletteDiv.innerHTML = `
-            <div class="roulette-lose">
-              <video id="roulette-video-lose" width="100%" style="border-radius:10px;max-width:320px;" autoplay playsinline loop muted></video>
-              <br>はずれ～また挑戦してね！<br>
-              <span style="font-size:0.9em;">次回もお疲れ様です！</span>
-            </div>
-          `;
-          setTimeout(() => {
-            const video = document.getElementById('roulette-video-lose');
-            video.src = "2w2RgwYcL080demHj2RyNDjIRJU.mp4";
-            video.load();
-            video.play();
-            const audio = document.getElementById('audio-lose');
-            audio.currentTime = 0;
-            audio.play();
-          }, 100);
+  if (qrReader) {
+    qrReader.stop().catch(()=>{});
+    qrReader = null;
+  }
+  qrReader = new Html5Qrcode("qr-reader");
+  qrReader.start(
+    { facingMode: "environment" },
+    { fps: 30, qrbox: 320, aspectRatio: 1 },
+    qrCodeMessage => {
+      qrReader.stop().then(() => {
+        clearInterval(frameTimer);
+        document.getElementById("qr-reader").classList.add("hidden");
+        qrReader = null;
+        if (typeof qrCodeMessage !== "string" || qrCodeMessage.length < 1) {
+          showResult("QRコードが不正です", false);
+          return;
         }
-      }, 900);
-    }
-
-    function stopRouletteMedia() {
-      ['audio-win','audio-lose'].forEach(id=>{
-        const a = document.getElementById(id);
-        if(a && !a.paused) try{a.pause();a.currentTime=0;}catch(e){}
+        processStamp(type, qrCodeMessage);
       });
-      ['roulette-video-win','roulette-video-lose'].forEach(id=>{
-        const v = document.getElementById(id);
-        if(v && !v.paused) try{v.pause();v.currentTime=0;}catch(e){}
-      });
-    }
+    },
+    () => {},
+    () => { qrLastDetect = Date.now(); }
+  ).catch(err => {
+    clearInterval(frameTimer);
+    document.getElementById("result").textContent = "カメラ起動に失敗しました";
+    document.getElementById("qr-reader").classList.add("hidden");
+    qrReader = null;
+  });
+}
 
-    // 日報入力モーダル
-    function showReportModal(callback) {
-      tempReportCallback = callback;
-      document.getElementById("report-modal-inner").innerHTML = `
-        <form id="report-form" class="change-request-form" onsubmit="submitReportModal(event)">
-          <label for="report-text">業務日報（必須）</label>
-          <textarea id="report-text" rows="5" required placeholder="本日の業務内容や特記事項を記入してください"></textarea>
-          <button type="submit" class="btn" style="padding:8px 22px;font-size:1em;">登録</button>
-        </form>
-      `;
-      document.getElementById("report-modal-bg").classList.remove("hidden");
-      setTimeout(()=>{document.getElementById("report-text").focus();},200);
-    }
+function drawQRFrame(status) {
+  const canvas = document.getElementById("qr-canvas-frame");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const color = status==="detect" ? "#ffd600" : "#888";
+  const lineW = 6, len = 38;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineW;
+  ctx.beginPath();
+  ctx.moveTo(0, len); ctx.lineTo(0,0); ctx.lineTo(len,0); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(canvas.width-len,0); ctx.lineTo(canvas.width,0); ctx.lineTo(canvas.width,len); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0,canvas.height-len); ctx.lineTo(0,canvas.height); ctx.lineTo(len,canvas.height); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(canvas.width-len,canvas.height); ctx.lineTo(canvas.width,canvas.height); ctx.lineTo(canvas.width,canvas.height-len); ctx.stroke();
+}
 
-    function submitReportModal(e) {
-      e.preventDefault();
-      const text = document.getElementById("report-text").value.trim();
-      if (text === "") return;
-      document.getElementById("report-modal-bg").classList.add("hidden");
-      if (typeof tempReportCallback === "function") tempReportCallback(text);
-      tempReportCallback = null;
-    }
-    function closeReportModal(e) {
-      document.getElementById("report-modal-bg").classList.add("hidden");
-      tempReportCallback = null;
-    }
+// ------------------------------
+// 打刻処理つづき
+// ------------------------------
+function processStamp(type, qrCodeMessage) {
+  const session = getSession();
+  const now = new Date();
+  const today = getTodayString();
+  const time = pad(now.getHours()) + ":" + pad(now.getMinutes());
+  const deviceInfo = getDeviceInfo();
+  const history = {
+    empno: session.empno,
+    name: session.name,
+    dep: session.dep,
+    sec: session.sec,
+    date: today,
+    time: time,
+    type: type,
+    qr: qrCodeMessage,
+    timestamp: now.getTime(),
+    datetime: now.toISOString(),
+    manual: false,
+    device: deviceInfo
+  };
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      history.loc = pos.coords.latitude + "," + pos.coords.longitude;
+      saveStamp(history, type);
+    }, err => {
+      history.loc = "位置情報取得失敗";
+      saveStamp(history, type);
+    });
+  } else {
+    history.loc = "未対応";
+    saveStamp(history, type);
+  }
+}
 
-    function addHistory(empno, empname, type, qr, date, coords, device, report) {
-      let key = "kaory_history_" + empno;
-      let history = JSON.parse(localStorage.getItem(key) || "[]");
-      const entry = {
-        empno: empno,
-        empname: empname,
-        type,
-        qr,
-        date: date.toLocaleString(),
-        lat: coords ? coords.latitude : null,
-        lng: coords ? coords.longitude : null,
-        device: device || "",
-        report: report || ""
+function saveStamp(history, type) {
+  const histories = getAllHistories();
+  histories.push(history);
+  setAllHistories(histories);
+  playStampAudio();
+  if (type === "out") {
+    showReportModal(history);
+  } else {
+    showResult("出勤打刻しました！", true);
+    updateStampButtons();
+    showUserHistory(getSession());
+    setTimeout(runRouletteAuto, 1000);
+  }
+}
+
+function showResult(msg, success) {
+  document.getElementById("result").innerHTML = `<span style="color:${success?"#4caf50":"#f44336"};font-weight:bold;">${escapeHtml(msg)}</span>`;
+}
+
+function playStampAudio() {
+  try {
+    document.getElementById("audio-stamp").currentTime = 0;
+    document.getElementById("audio-stamp").play();
+  } catch {}
+}
+
+// ------------------------------
+// 日報入力モーダル
+// ------------------------------
+function showReportModal(history) {
+  document.getElementById("report-modal-bg").classList.remove("hidden");
+  document.getElementById("report-modal-inner").innerHTML = `
+    <form id="report-form">
+      <div style="margin-bottom:10px;"><b>本日の業務日報を入力してください（任意）</b></div>
+      <textarea id="report-text" rows="4" style="width:100%;" maxlength="300"></textarea>
+      <div style="margin-top:10px;">
+        <button type="submit" class="btn" style="padding:7px 18px;font-size:1em;">登録</button>
+      </div>
+    </form>
+  `;
+  document.getElementById("report-form").onsubmit = function(e){
+    e.preventDefault();
+    const text = document.getElementById("report-text").value.trim();
+    const histories = getAllHistories();
+    for (let i=histories.length-1; i>=0; i--) {
+      if (histories[i].empno===history.empno && histories[i].date===history.date && histories[i].type==="out" && !histories[i].manual) {
+        histories[i].report = text;
+        break;
+      }
+    }
+    setAllHistories(histories);
+    closeReportModal();
+    showResult("退勤打刻しました！", true);
+    updateStampButtons();
+    showUserHistory(getSession());
+    setTimeout(runRouletteAuto, 1000);
+  };
+}
+
+function closeReportModal(e){
+  document.getElementById("report-modal-bg").classList.add("hidden");
+}
+
+// ------------------------------
+// ルーレット機能（自動実行）
+// ------------------------------
+function runRouletteAuto() {
+  const area = document.getElementById("roulette-area");
+  const win = Math.random() < 0.15;
+  if (win) {
+    area.innerHTML = `<div class="roulette-win">おめでとう！当たり！<br>スクショして総務部に見せてね！</div>
+    <video src="dorakue-win.mp4" autoplay loop muted style="width:100%;max-width:320px;margin-top:10px;border-radius:8px;"></video>`;
+    try {
+      document.getElementById("audio-win").currentTime = 0;
+      document.getElementById("audio-win").play();
+    } catch {}
+  } else {
+    area.innerHTML = `<div class="roulette-lose">残念！また挑戦してね！</div>`;
+    try {
+      document.getElementById("audio-lose").currentTime = 0;
+      document.getElementById("audio-lose").play();
+    } catch {}
+  }
+}
+
+// ------------------------------
+// 管理者画面・CSV/PDF出力（1日1人1行・左寄せ・勤務時間列追加）
+// ------------------------------
+function adminLogin() {
+  const pass = document.getElementById("admin-pass").value;
+  if (pass === "kaoryadmin") {
+    setSession({type:"admin"});
+    showAdminArea();
+  } else {
+    document.getElementById("admin-login-error").textContent = "パスワードが違います";
+  }
+}
+
+function adminLogout() {
+  clearSession();
+  showLoginArea();
+}
+
+function showAdminArea() {
+  document.getElementById("login-area").classList.add("hidden");
+  document.getElementById("stamp-area").classList.add("hidden");
+  document.getElementById("admin-area").classList.remove("hidden");
+  renderAdminHistory();
+  renderAdminRequests();
+  renderAdminSearchOptions();
+}
+
+function clearAllHistories() {
+  if (!confirm("本当に全履歴を消去しますか？")) return;
+  setAllHistories([]);
+  renderAdminHistory();
+  renderAdminRequests();
+}
+
+// 1日1人1行の形式で履歴を表示（勤務時間列追加）
+function renderAdminHistory(filtered) {
+  const histories = (filtered!==undefined ? filtered : getAllHistories());
+  const grouped = groupHistoriesByDateAndEmployee(histories);
+  
+  let html = `<table class="admin-history-table" border="1" cellspacing="0" cellpadding="0">
+    <thead>
+      <tr>
+        <th>日付</th>
+        <th>部署</th>
+        <th>課</th>
+        <th>社員番号</th>
+        <th>氏名</th>
+        <th>出勤時間</th>
+        <th>退勤時間</th>
+        <th>勤務時間</th>
+        <th>打刻位置</th>
+        <th>打刻端末</th>
+        <th>日報</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+  
+  for (const entry of grouped) {
+    const workingHours = calculateWorkingHours(entry.inTime, entry.outTime);
+    const locationDisplay = entry.location ? 
+      `<span class="location-ellipsis" onclick="showLocationModal('${escapeHtml(entry.location)}')">${escapeHtml(entry.location.substring(0,10))}...</span>` : "";
+    const deviceDisplay = entry.device ? 
+      `<span class="device-ellipsis" onclick="showDeviceModal('${escapeHtml(entry.device)}')">${escapeHtml(entry.device.substring(0,15))}...</span>` : "";
+    const reportDisplay = entry.report ? 
+      `<span class="report-ellipsis" onclick="showReportModalAdmin('${escapeHtml(entry.report)}')">${escapeHtml(entry.report.substring(0,20))}...</span>` : "";
+    
+    html += `<tr>
+      <td>${escapeHtml(entry.date)}</td>
+      <td>${escapeHtml(entry.dep)}</td>
+      <td>${escapeHtml(entry.sec)}</td>
+      <td>${escapeHtml(entry.empno)}</td>
+      <td>${escapeHtml(entry.name)}</td>
+      <td>${escapeHtml(entry.inTime || "-")}</td>
+      <td>${escapeHtml(entry.outTime || "-")}</td>
+      <td style="font-weight:bold; color:${workingHours !== '-' && !workingHours.startsWith('0') ? '#1976d2' : '#666'}; text-align:center;">${escapeHtml(workingHours)}</td>
+      <td>${locationDisplay}</td>
+      <td>${deviceDisplay}</td>
+      <td style="white-space:pre-line;">${reportDisplay}</td>
+    </tr>`;
+  }
+  html += "</tbody></table>";
+  document.getElementById("admin-history").innerHTML = html;
+}
+
+// 日付と社員でグループ化する関数
+function groupHistoriesByDateAndEmployee(histories) {
+  const groups = {};
+  
+  for (const h of histories) {
+    const key = `${h.date}_${h.empno}`;
+    if (!groups[key]) {
+      groups[key] = {
+        date: h.date,
+        empno: h.empno,
+        name: h.name,
+        dep: h.dep,
+        sec: h.sec,
+        inTime: null,
+        outTime: null,
+        location: null,
+        device: null,
+        report: null
       };
-      history.push(entry);
-      localStorage.setItem(key, JSON.stringify(history));
-      renderHistory();
     }
+    
+    if (h.type === "in") {
+      groups[key].inTime = h.time + (h.manual ? "(手動)" : "");
+    } else if (h.type === "out") {
+      groups[key].outTime = h.time + (h.manual ? "(手動)" : "");
+      if (h.report) groups[key].report = h.report;
+    }
+    
+    if (h.loc && !groups[key].location) {
+      groups[key].location = h.loc;
+    }
+    if (h.device && !groups[key].device) {
+      groups[key].device = h.device;
+    }
+  }
+  
+  return Object.values(groups).sort((a,b) => b.date.localeCompare(a.date));
+}
 
-    // escapeHtml
-    function escapeHtml(str) {
-      if (typeof str !== 'string') return "";
-      return str.replace(/[&<>"'`]/g, function(match) {
-        return ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-          '`': '&#x60;'
-        })[match];
-      });
-    }
+// モーダル表示関数
+function showLocationModal(location) {
+  document.getElementById("modal-text").innerHTML = `<h3>位置情報</h3><p>${escapeHtml(location)}</p>`;
+  document.getElementById("modal-bg").classList.remove("hidden");
+}
 
-    function renderHistory() {
-      let key = "kaory_history_" + currentEmpNo;
-      let history = JSON.parse(localStorage.getItem(key) || "[]");
-      let today = new Date();
-      let days = [];
-      for(let i=0;i<3;i++){
-        let d = new Date(today);
-        d.setDate(today.getDate()-i);
-        days.push(d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0"));
-      }
-      let filtered = history.filter(h=>{
-        let hDate = new Date(h.date);
-        let hStr = hDate.getFullYear()+"-"+(hDate.getMonth()+1).toString().padStart(2,"0")+"-"+hDate.getDate().toString().padStart(2,"0");
-        return days.includes(hStr);
-      });
+function showDeviceModal(device) {
+  document.getElementById("modal-text").innerHTML = `<h3>端末情報</h3><p>${escapeHtml(device)}</p>`;
+  document.getElementById("modal-bg").classList.remove("hidden");
+}
 
-      let html = "<b>直近3日間の打刻履歴</b><br>";
-      if (filtered.length === 0) {
-        html += "<span style='color:#888;'>まだ履歴がありません</span>";
-      } else {
-        filtered.forEach((h, i) => {
-          html += `<div class="history-entry">
-            [${escapeHtml(h.date)}]　
-            種別: <b>${escapeHtml(h.type)}</b>　
-            QR内容: <b>${escapeHtml(h.qr)}</b>　
-            ${h.lat && h.lng ? `位置: <a href="https://www.google.com/maps?q=${h.lat},${h.lng}" target="_blank">${h.lat.toFixed(5)},${h.lng.toFixed(5)}</a>　` : "位置: なし　"}
-            ${
-              h.type === "退勤"
-                ? `<br>日報: <span style="background:#ffe082;padding:2px 6px;border-radius:3px;">${escapeHtml(h.report||"")}</span>
-                   <button class="change-report-btn" onclick="showChangeReportForm(${i})">日報修正申請</button>`
-                : ""
-            }
-            <button class="change-time-btn" onclick="showChangeTimeForm(${i})">時刻変更申請</button>
-            <div id="change-time-form-${i}"></div>
-            <div id="change-report-form-${i}"></div>
-          </div>`;
-        });
-      }
-      document.getElementById("history").innerHTML = html;
-    }
+function showReportModalAdmin(report) {
+  document.getElementById("modal-text").innerHTML = `<h3>日報</h3><p style="white-space:pre-line;">${escapeHtml(report)}</p>`;
+  document.getElementById("modal-bg").classList.remove("hidden");
+}
 
-    // --- 時刻変更申請フォーム表示 ---
-    function showChangeTimeForm(index) {
-      let formId = `change-time-form-${index}`;
-      let formHtml = `
-      <form class="change-request-form" onsubmit="submitChangeTime(event,${index})">
-        <label>希望時刻</label>
-        <input type="datetime-local" id="change-time-newtime-${index}" required>
-        <label>理由</label>
-        <textarea id="change-time-reason-${index}" rows="2" required></textarea>
-        <button type="submit" class="btn" style="padding:6px 12px;font-size:1em;">申請する</button>
-        <button type="button" onclick="closeChangeTimeForm(${index})" class="btn" style="background:#ccc;color:#222;padding:6px 12px;font-size:1em;">キャンセル</button>
-      </form>
-      `;
-      document.getElementById(formId).innerHTML = formHtml;
-    }
-    function closeChangeTimeForm(index) {
-      document.getElementById(`change-time-form-${index}`).innerHTML = "";
-    }
+function closeModal(e) {
+  if (e.target.classList.contains("modal-bg") || e.target.classList.contains("modal-close")) {
+    document.getElementById("modal-bg").classList.add("hidden");
+  }
+}
 
-    // --- 日報修正申請フォーム表示 ---
-    function showChangeReportForm(index) {
-      let formId = `change-report-form-${index}`;
-      let formHtml = `
-      <form class="change-report-form" onsubmit="submitChangeReport(event,${index})">
-        <label>修正後の日報</label>
-        <textarea id="change-report-newreport-${index}" rows="3" required></textarea>
-        <label>理由</label>
-        <textarea id="change-report-reason-${index}" rows="2" required></textarea>
-        <button type="submit" class="btn" style="padding:6px 12px;font-size:1em;">申請する</button>
-        <button type="button" onclick="closeChangeReportForm(${index})" class="btn" style="background:#ccc;color:#222;padding:6px 12px;font-size:1em;">キャンセル</button>
-      </form>
-      `;
-      document.getElementById(formId).innerHTML = formHtml;
-    }
-    function closeChangeReportForm(index) {
-      document.getElementById(`change-report-form-${index}`).innerHTML = "";
-    }
+function renderAdminRequests() {
+  const requests = getAllRequests().slice().sort((a,b)=>b.timestamp-a.timestamp);
+  let html = `<table class="admin-requests-table" border="1" cellspacing="0" cellpadding="0">
+    <thead>
+      <tr>
+        <th>申請日</th>
+        <th>氏名</th>
+        <th>番号</th>
+        <th>部署</th>
+        <th>課</th>
+        <th>種別</th>
+        <th>対象日</th>
+        <th>出退勤</th>
+        <th>時刻</th>
+        <th>内容</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+  for (const r of requests) {
+    html += `<tr>
+      <td>${escapeHtml(getDateTimeString(r.timestamp))}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.empno)}</td>
+      <td>${escapeHtml(r.dep)}</td>
+      <td>${escapeHtml(r.sec)}</td>
+      <td>${r.type==="manual"?"手動打刻":r.type==="fix"?"打刻修正":"日報修正"}</td>
+      <td>${escapeHtml(r.targetDate||"")}</td>
+      <td>${r.targetType==="in"?"出勤":r.targetType==="out"?"退勤":""}</td>
+      <td>${escapeHtml(r.targetTime||"")}</td>
+      <td style="white-space:pre-line;">${escapeHtml(r.content||"")}</td>
+      <td>
+        <button class="admin-approve-btn" onclick="approveRequest(${r.id})">承認</button>
+        <button class="admin-reject-btn" onclick="rejectRequest(${r.id})">却下</button>
+      </td>
+    </tr>`;
+  }
+  html += "</tbody></table>";
+  document.getElementById("admin-requests").innerHTML = html;
+}
 
-    // --- 申請送信（時刻） ---
-    function submitChangeTime(e, index) {
-      e.preventDefault();
-      let key = "kaory_history_" + currentEmpNo;
-      let history = JSON.parse(localStorage.getItem(key) || "[]");
-      let h = history[index];
-      let newTime = document.getElementById(`change-time-newtime-${index}`).value;
-      let reason = document.getElementById(`change-time-reason-${index}`).value;
-      if (!newTime || !reason) return;
-      let requests = getRequests();
-      requests.unshift({
-        type: "time",
-        empno: currentEmpNo,
-        empname: currentEmpName,
-        historyIndex: index,
-        oldDate: h.date,
-        punchType: h.type,
-        newTime: newTime,
-        reason: reason,
-        requestDate: (new Date()).toLocaleString(),
-        status: "pending"
-      });
-      setRequests(requests);
-      alert("申請を送信しました");
-      closeChangeTimeForm(index);
+// 検索欄の選択肢を展開
+function renderAdminSearchOptions() {
+  const sectionSet = new Set();
+  for (const dep in organizationData) {
+    for (const sec in organizationData[dep]) {
+      sectionSet.add(sec);
     }
-
-    // --- 申請送信（日報） ---
-    function submitChangeReport(e, index) {
-      e.preventDefault();
-      let key = "kaory_history_" + currentEmpNo;
-      let history = JSON.parse(localStorage.getItem(key) || "[]");
-      let h = history[index];
-      let newReport = document.getElementById(`change-report-newreport-${index}`).value;
-      let reason = document.getElementById(`change-report-reason-${index}`).value;
-      if (!newReport || !reason) return;
-      let requests = getRequests();
-      requests.unshift({
-        type: "report",
-        empno: currentEmpNo,
-        empname: currentEmpName,
-        historyIndex: index,
-        oldDate: h.date,
-        punchType: h.type,
-        newReport: newReport,
-        reason: reason,
-        requestDate: (new Date()).toLocaleString(),
-        status: "pending"
-      });
-      setRequests(requests);
-      alert("申請を送信しました");
-      closeChangeReportForm(index);
-    }
-
-    // --- 申請データ管理 ---
-    function getRequests() {
-      return JSON.parse(localStorage.getItem("kaory_requests") || "[]");
-    }
-    function setRequests(reqs) {
-      localStorage.setItem("kaory_requests", JSON.stringify(reqs));
-    }
-
-    // --- 管理者ログイン ---
-    function adminLogin() {
-      const pass = document.getElementById('admin-pass').value;
-      if (pass === "1") {
-        sessionStorage.setItem("admin", "1");
-        showAdminArea();
-      } else {
-        document.getElementById("admin-login-error").innerText = "パスワードが違います";
+  }
+  const secSel = document.getElementById("search-sections");
+  secSel.innerHTML = "";
+  for (const sec of Array.from(sectionSet)) {
+    secSel.innerHTML += `<option value="${escapeHtml(sec)}">${escapeHtml(sec)}</option>`;
+  }
+  const empSet = new Set();
+  for (const dep in organizationData) {
+    for (const sec in organizationData[dep]) {
+      for (const emp of organizationData[dep][sec]) {
+        empSet.add(emp.name);
       }
     }
+  }
+  const empSel = document.getElementById("search-employees");
+  empSel.innerHTML = "";
+  for (const name of Array.from(empSet)) {
+    empSel.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+  }
+}
 
-    function showAdminArea() {
-      document.getElementById("login-area").classList.add("hidden");
-      document.getElementById("stamp-area").classList.add("hidden");
-      document.getElementById("admin-area").classList.remove("hidden");
-      renderAdminHistory();
-      renderAdminRequests();
-      document.getElementById("modal-bg").classList.add("hidden");
-      document.getElementById("report-modal-bg").classList.add("hidden");
-    }
+// 検索処理
+function adminSearch() {
+  const from = document.getElementById("search-date-from").value;
+  const to = document.getElementById("search-date-to").value;
+  const secs = Array.from(document.getElementById("search-sections").selectedOptions).map(o=>o.value);
+  const emps = Array.from(document.getElementById("search-employees").selectedOptions).map(o=>o.value);
+  let histories = getAllHistories();
+  if (from) histories = histories.filter(h=>h.date>=from);
+  if (to) histories = histories.filter(h=>h.date<=to);
+  if (secs.length) histories = histories.filter(h=>secs.includes(h.sec));
+  if (emps.length) histories = histories.filter(h=>emps.includes(h.name));
+  renderAdminHistory(histories);
+}
 
-    function adminLogout() {
-      sessionStorage.removeItem("admin");
-      showLoginArea();
-    }
+function adminSearchReset() {
+  document.getElementById("search-date-from").value = "";
+  document.getElementById("search-date-to").value = "";
+  document.getElementById("search-sections").selectedIndex = -1;
+  document.getElementById("search-employees").selectedIndex = -1;
+  renderAdminHistory();
+}
 
-    // --- 和暦変換 ---
-    function toWareki(ymd) {
-      let [y, m, d] = ymd.split("-").map(x=>parseInt(x));
-      if(y >= 2019) return `令和${y-2018}年${m}月${d}日`;
-      if(y >= 1989) return `平成${y-1988}年${m}月${d}日`;
-      if(y >= 1926) return `昭和${y-1925}年${m}月${d}日`;
-      return `${y}年${m}月${d}日`;
-    }
+// CSV出力（UTF-8 BOM付きで文字化け防止・勤務時間列追加）
+function adminExportCSV() {
+  const histories = getAllHistories();
+  const grouped = groupHistoriesByDateAndEmployee(histories);
+  let csv = "日付,部署,課,社員番号,氏名,出勤時間,退勤時間,勤務時間,打刻位置,打刻端末,日報\n";
+  for (const entry of grouped) {
+    const workingHours = calculateWorkingHours(entry.inTime, entry.outTime);
+    let dateWide = entry.date + "        ";
+    csv += [
+      dateWide, entry.dep, entry.sec, entry.empno, entry.name,
+      entry.inTime||"", entry.outTime||"", workingHours, entry.location||"",
+      entry.device||"", (entry.report||"").replace(/"/g,'""')
+    ].map(s=>`"${s||""}"`).join(",") + "\n";
+  }
+  const blob = new Blob(["\uFEFF" + csv], {type:"text/csv;charset=utf-8;"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "kaory_history.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+// PDF出力（勤務時間列追加）
+function adminExportPDF() {
+  const { jsPDF } = window.jspdf;
+  const histories = getAllHistories();
+  const grouped = groupHistoriesByDateAndEmployee(histories);
+  const doc = new jsPDF({orientation:"landscape"});
 
-    // --- 管理者用履歴一覧（検索付き） ---
-    function renderAdminHistory() {
-      let allKeys = Object.keys(localStorage).filter(k => k.startsWith("kaory_history_"));
-      let allEntries = [];
-      allKeys.forEach(key => {
-        const empno = key.replace("kaory_history_", "");
-        const history = JSON.parse(localStorage.getItem(key) || "[]");
-        history.forEach(h => {
-          let section = "", dept = "";
-          Object.keys(organizationData).forEach(d => {
-            Object.keys(organizationData[d]).forEach(s => {
-              if (organizationData[d][s].some(e => e.empno === empno)) {
-                section = s; dept = d;
-              }
-            });
-          });
-          allEntries.push({
-            empno: empno,
-            empname: h.empname || "",
-            type: h.type,
-            qr: h.qr,
-            date: h.date,
-            lat: h.lat,
-            lng: h.lng,
-            device: h.device || "",
-            report: h.report || "",
-            section: section,
-            dept: dept
-          });
-        });
+  // NotoSansJPフォント埋め込みを試行
+  try {
+    fetch('./NotoSansJP-VariableFont_wght-normal.otf')
+      .then(response => response.arrayBuffer())
+      .then(fontBuffer => {
+        const base64String = btoa(String.fromCharCode(...new Uint8Array(fontBuffer)));
+        doc.addFileToVFS("NotoSansJP-normal.otf", base64String);
+        doc.addFont("NotoSansJP-normal.otf", "NotoSansJP", "normal");
+        doc.setFont("NotoSansJP");
+        generatePDFTable();
+      })
+      .catch(() => {
+        // フォント読み込み失敗時はデフォルトフォント使用
+        generatePDFTable();
       });
-      let grouped = {};
-      allEntries.forEach(entry => {
-        let dt = new Date(entry.date);
-        let y = dt.getFullYear();
-        let m = dt.getMonth() + 1;
-        let d = dt.getDate();
-        let dayKey = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-        if (!grouped[dayKey]) grouped[dayKey] = {};
-        if (!grouped[dayKey][entry.empno]) grouped[dayKey][entry.empno] = { empname: entry.empname, section: entry.section, dept: entry.dept, in: null, out: null, inObj: null, outObj: null, lat: null, lng: null, device: null, report: null };
-        if (entry.type === "出勤") {
-          if (!grouped[dayKey][entry.empno].in || new Date(entry.date) < new Date(grouped[dayKey][entry.empno].inObj?.date)) {
-            grouped[dayKey][entry.empno].in = dt;
-            grouped[dayKey][entry.empno].inObj = entry;
-          }
-        }
-        if (entry.type === "退勤") {
-          if (!grouped[dayKey][entry.empno].out || new Date(entry.date) > new Date(grouped[dayKey][entry.empno].outObj?.date)) {
-            grouped[dayKey][entry.empno].out = dt;
-            grouped[dayKey][entry.empno].outObj = entry;
-          }
-        }
-      });
+  } catch {
+    generatePDFTable();
+  }
 
-      let rows = [];
-      Object.keys(grouped).sort().forEach(dayKey => {
-        Object.keys(grouped[dayKey]).sort().forEach(empno => {
-          let g = grouped[dayKey][empno];
-          rows.push({
-            dayKey,
-            empno,
-            empname: g.empname,
-            section: g.section,
-            dept: g.dept,
-            in: g.in,
-            out: g.out,
-            inObj: g.inObj,
-            outObj: g.outObj
-          });
-        });
-      });
+  function generatePDFTable() {
+    const head = [["日付","部署","課","社員番号","氏名","出勤時間","退勤時間","勤務時間","打刻位置","打刻端末","日報"]];
+    const body = grouped.map(entry=>[
+      entry.date, entry.dep, entry.sec, entry.empno, entry.name,
+      entry.inTime||"-", entry.outTime||"-", calculateWorkingHours(entry.inTime, entry.outTime),
+      entry.location||"-", entry.device||"-", entry.report||""
+    ]);
+    doc.autoTable({
+      head: head,
+      body: body,
+      startY: 10,
+      styles: { fontSize: 8, cellWidth: 'wrap', overflow: 'linebreak' },
+      columnStyles: {
+        0: {cellWidth:25}, 1:{cellWidth:20}, 2:{cellWidth:25}, 3:{cellWidth:15},
+        4:{cellWidth:20}, 5:{cellWidth:18}, 6:{cellWidth:18}, 7:{cellWidth:18},
+        8:{cellWidth:30}, 9:{cellWidth:30}, 10:{cellWidth:50}
+      },
+      headStyles: {fillColor:[25,118,210]}
+    });
+    doc.save("kaory_history.pdf");
+  }
+}
 
-      adminAllRowsCache = rows;
-
-      let filteredRows = rows.filter(row => {
-        let ok = true;
-        if (adminSearchFilters.dateFrom) {
-          let fromYMD = adminSearchFilters.dateFrom;
-          if (row.dayKey < fromYMD) ok = false;
-        }
-        if (adminSearchFilters.dateTo) {
-          let toYMD = adminSearchFilters.dateTo;
-          if (row.dayKey > toYMD) ok = false;
-        }
-        if (adminSearchFilters.sections.length > 0 && !adminSearchFilters.sections.includes(row.section)) ok = false;
-        if (adminSearchFilters.employees.length > 0 && !adminSearchFilters.employees.includes(row.empno)) ok = false;
-        return ok;
-      });
-
-      let html = '';
-      if (filteredRows.length === 0) {
-        html = "<span style='color:#888;'>該当する履歴がありません</span>";
-      } else {
-        html = `<table class="admin-history-table">
-          <thead>
-            <tr>
-              <th style="width:100px;">日付</th>
-              <th style="width:80px;">社員番号</th>
-              <th style="width:110px;">社員氏名</th>
-              <th style="width:90px;">課</th>
-              <th style="width:90px;">出勤時刻</th>
-              <th style="width:90px;">退勤時刻</th>
-              <th style="width:90px;">勤務時間</th>
-              <th style="width:60px;">位置</th>
-              <th style="width:60px;">端末番号</th>
-              <th style="width:60px;">作業日報</th>
-            </tr>
-          </thead>
-          <tbody>
-        `;
-        filteredRows.forEach((row, idx) => {
-          let wareki = toWareki(row.dayKey);
-          let inTime = row.in ? `${String(row.in.getHours()).padStart(2, "0")}:${String(row.in.getMinutes()).padStart(2, "0")}` : "";
-          let outTime = row.out ? `${String(row.out.getHours()).padStart(2, "0")}:${String(row.out.getMinutes()).padStart(2, "0")}` : "";
-
-          let workTimeStr = "";
-          if (row.in && row.out) {
-            let diffMs = row.out - row.in - 60 * 60 * 1000;
-            if (diffMs < 0) diffMs = 0;
-            let hours = Math.floor(diffMs / (60 * 60 * 1000));
-            let mins = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
-            workTimeStr = `${hours}時間${mins}分`;
-          } else if (row.in && !row.out) {
-            workTimeStr = "計測中";
-          } else {
-            workTimeStr = "";
-          }
-
-          let lat = (row.outObj && row.outObj.lat) || (row.inObj && row.inObj.lat) || "";
-          let lng = (row.outObj && row.outObj.lng) || (row.inObj && row.inObj.lng) || "";
-          let device = (row.outObj && row.outObj.device) || (row.inObj && row.inObj.device) || "";
-          let report = (row.outObj && row.outObj.report) || (row.inObj && row.inObj.report) || "";
-
-          html += `<tr>
-            <td>${escapeHtml(wareki)}</td>
-            <td>${escapeHtml(row.empno)}</td>
-            <td>${escapeHtml(row.empname)}</td>
-            <td>${escapeHtml(row.section)}</td>
-            <td>${inTime}</td>
-            <td>${outTime}</td>
-            <td>${workTimeStr}</td>
-            <td><span class="location-ellipsis" onclick="showDetailModal('位置情報', '${escapeHtml(lat && lng ? lat + ',' + lng : 'なし')}')">@</span></td>
-            <td><span class="device-ellipsis" onclick="showDetailModal('端末番号', '${escapeHtml(device || 'なし')}')">@</span></td>
-            <td><span class="report-ellipsis" onclick="showDetailModal('作業日報', '${escapeHtml(report || 'なし')}')">@</span></td>
-          </tr>`;
-        });
-        html += "</tbody></table>";
+// ------------------------------
+// 申請承認・却下処理
+// ------------------------------
+function approveRequest(id) {
+  let requests = getAllRequests();
+  const reqIdx = requests.findIndex(r=>r.id===id);
+  if (reqIdx === -1) return;
+  const req = requests[reqIdx];
+  if (req.type === "manual") {
+    const history = {
+      empno: req.empno,
+      name: req.name,
+      dep: req.dep,
+      sec: req.sec,
+      date: req.targetDate,
+      time: req.targetTime,
+      type: req.targetType,
+      qr: "手動申請",
+      timestamp: req.timestamp,
+      datetime: new Date(req.timestamp).toISOString(),
+      manual: true,
+      report: req.content || "",
+      loc: "手動",
+      device: "手動申請"
+    };
+    const histories = getAllHistories();
+    histories.push(history);
+    setAllHistories(histories);
+  }
+  if (req.type === "fix") {
+    const histories = getAllHistories();
+    for (let h of histories) {
+      if (h.empno===req.empno && h.date===req.targetDate && h.type===req.targetType && !h.manual) {
+        h.time = req.targetTime;
+        break;
       }
-      document.getElementById("admin-history").innerHTML = html;
     }
-
-    function showDetailModal(label, content) {
-      let html = `<b>${label}</b><br><div style="margin-top:8px;">${content}</div>`;
-      document.getElementById("modal-text").innerHTML = html;
-      document.getElementById("modal-bg").classList.remove("hidden");
-    }
-    function closeModal(e) {
-      document.getElementById("modal-bg").classList.add("hidden");
-    }
-
-    // --- 管理者：時刻・日報変更申請一覧 ---
-    function renderAdminRequests() {
-      let reqs = getRequests();
-      if (reqs.length === 0) {
-        document.getElementById("admin-requests").innerHTML = "<span style='color:#888;'>申請はありません</span>";
-        return;
+    setAllHistories(histories);
+  }
+  if (req.type === "report") {
+    const histories = getAllHistories();
+    for (let h of histories) {
+      if (h.empno===req.empno && h.date===req.targetDate && h.type==="out" && !h.manual) {
+        h.report = req.content;
+        break;
       }
-      let html = `<table class="admin-requests-table">
-        <thead>
-          <tr>
-            <th>申請日時</th>
-            <th>社員番号</th>
-            <th>名前</th>
-            <th>種別</th>
-            <th>元時刻</th>
-            <th>元日報</th>
-            <th>希望内容</th>
-            <th>理由</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
-      reqs.forEach((r, idx) => {
-        let key = "kaory_history_" + r.empno;
-        let history = JSON.parse(localStorage.getItem(key) || "[]");
-        let h = history.find(hh=>hh.date===r.oldDate && hh.type===r.punchType);
-        let oldReport = h ? h.report : "";
-        html += `<tr>
-          <td>${escapeHtml(r.requestDate)}</td>
-          <td>${escapeHtml(r.empno)}</td>
-          <td>${escapeHtml(r.empname)}</td>
-          <td>${r.type==="time"?"時刻":"日報"}</td>
-          <td>${escapeHtml(r.oldDate)}</td>
-          <td>${escapeHtml(oldReport)}</td>
-          <td>${
-            r.type==="time"
-              ? escapeHtml(new Date(r.newTime).toLocaleString())
-              : escapeHtml(r.newReport)
-          }</td>
-          <td>${escapeHtml(r.reason)}</td>
-          <td>
-            <button class="admin-approve-btn" onclick="approveRequest(${idx})">承認</button>
-            <button class="admin-reject-btn" onclick="rejectRequest(${idx})">棄却</button>
-          </td>
-        </tr>`;
-      });
-      html += "</tbody></table>";
-      document.getElementById("admin-requests").innerHTML = html;
     }
+    setAllHistories(histories);
+  }
+  requests.splice(reqIdx,1);
+  setAllRequests(requests);
+  renderAdminHistory();
+  renderAdminRequests();
+}
 
-    // --- 申請承認 ---
-    function approveRequest(idx) {
-      let reqs = getRequests();
-      let r = reqs[idx];
-      let key = "kaory_history_" + r.empno;
-      let history = JSON.parse(localStorage.getItem(key) || "[]");
-      let hIndex = history.findIndex(h => h.date === r.oldDate && h.type === r.punchType);
-      if (hIndex === -1) {
-        alert("該当履歴が見つかりません。");
-        reqs.splice(idx, 1);
-        setRequests(reqs);
-        renderAdminRequests();
-        renderAdminHistory();
-        return;
-      }
-      if (r.type === "time") {
-        history[hIndex].date = new Date(r.newTime).toLocaleString();
-      } else if (r.type === "report") {
-        history[hIndex].report = r.newReport;
-      }
-      localStorage.setItem(key, JSON.stringify(history));
-      reqs.splice(idx, 1);
-      setRequests(reqs);
-      alert("承認しました。履歴が変更されました。");
-      renderAdminRequests();
-      renderAdminHistory();
-    }
+function rejectRequest(id) {
+  let requests = getAllRequests();
+  const reqIdx = requests.findIndex(r=>r.id===id);
+  if (reqIdx === -1) return;
+  requests.splice(reqIdx,1);
+  setAllRequests(requests);
+  renderAdminRequests();
+}
 
-    // --- 申請棄却 ---
-    function rejectRequest(idx) {
-      let reqs = getRequests();
-      reqs.splice(idx, 1);
-      setRequests(reqs);
-      alert("申請を棄却しました。");
-      renderAdminRequests();
+// ------------------------------
+// 手動打刻申請モーダル
+// ------------------------------
+function openManualModal() {
+  const session = getSession();
+  if (!session) return;
+  document.getElementById("manual-modal-bg").classList.remove("hidden");
+  document.getElementById("manual-modal-inner").innerHTML = `
+    <form id="manual-form">
+      <div style="margin-bottom:10px;"><b>手動打刻申請</b></div>
+      <div>出退勤種別:
+        <select id="manual-type">
+          <option value="in">出勤</option>
+          <option value="out">退勤</option>
+        </select>
+      </div>
+      <div style="margin-top:7px;">対象日付: <input type="date" id="manual-date" value="${getTodayString()}"></div>
+      <div style="margin-top:7px;">時刻: <input type="time" id="manual-time" value="${getTimeString(new Date())}"></div>
+      <div style="margin-top:7px;">日報:<br><textarea id="manual-report" rows="2" maxlength="300" style="width:100%;"></textarea></div>
+      <div style="margin-top:12px;">
+        <button type="submit" class="btn" style="padding:7px 18px;font-size:1em;">申請</button>
+      </div>
+    </form>
+  `;
+  document.getElementById("manual-form").onsubmit = function(e){
+    e.preventDefault();
+    const type = document.getElementById("manual-type").value;
+    const date = document.getElementById("manual-date").value;
+    const time = document.getElementById("manual-time").value;
+    const report = document.getElementById("manual-report").value.trim();
+    if (!date || !time) {
+      alert("日付と時刻を入力してください");
+      return;
     }
+    const reqs = getAllRequests();
+    reqs.push({
+      id: Date.now() + Math.floor(Math.random()*100000),
+      type: "manual",
+      empno: session.empno,
+      name: session.name,
+      dep: session.dep,
+      sec: session.sec,
+      targetDate: date,
+      targetType: type,
+      targetTime: time,
+      content: report,
+      timestamp: Date.now()
+    });
+    setAllRequests(reqs);
+    closeManualModal();
+    alert("申請を受付けました。管理者の承認後に履歴に反映されます。");
+  };
+}
 
-    // --- 履歴全消去 ---
-    function clearAllHistories() {
-      if (!window.confirm("本当に全ての履歴を消去しますか？（元に戻せません）")) return;
-      let allKeys = Object.keys(localStorage).filter(k => k.startsWith("kaory_history_"));
-      allKeys.forEach(k => localStorage.removeItem(k));
-      localStorage.removeItem("kaory_requests");
-      renderAdminHistory();
-      renderAdminRequests();
-      alert("全ての履歴・申請を消去しました。");
+function closeManualModal(e){
+  document.getElementById("manual-modal-bg").classList.add("hidden");
+}
+
+// ------------------------------
+// 打刻修正申請（日報修正も）モーダル
+// ------------------------------
+function openFixModal(date, type, time) {
+  const session = getSession();
+  if (!session) return;
+  document.getElementById("fix-modal-bg").classList.remove("hidden");
+  let title = type==="in"?"出勤":"退勤";
+  document.getElementById("fix-modal-inner").innerHTML = `
+    <form id="fix-form">
+      <div style="margin-bottom:10px;"><b>${escapeHtml(date)} の${title}打刻修正申請</b></div>
+      <div>新しい時刻: <input type="time" id="fix-time" value="${escapeHtml(time)}"></div>
+      <div style="margin-top:7px;">
+        <button type="submit" class="btn" style="padding:7px 18px;font-size:1em;">申請</button>
+      </div>
+      <div style="margin-top:12px;">
+        <button type="button" class="btn" style="background:#ffa000;color:#fff;padding:7px 18px;font-size:1em;" onclick="openReportFixModal('${date}')">日報修正申請はこちら</button>
+      </div>
+    </form>
+  `;
+  document.getElementById("fix-form").onsubmit = function(e){
+    e.preventDefault();
+    const newTime = document.getElementById("fix-time").value;
+    if (!newTime) {
+      alert("時刻を入力してください");
+      return;
     }
-  </script>
+    const reqs = getAllRequests();
+    reqs.push({
+      id: Date.now() + Math.floor(Math.random()*100000),
+      type: "fix",
+      empno: session.empno,
+      name: session.name,
+      dep: session.dep,
+      sec: session.sec,
+      targetDate: date,
+      targetType: type,
+      targetTime: newTime,
+      timestamp: Date.now()
+    });
+    setAllRequests(reqs);
+    closeFixModal();
+    alert("申請を受付けました。管理者の承認後に反映されます。");
+  };
+}
+
+function closeFixModal(e){
+  document.getElementById("fix-modal-bg").classList.add("hidden");
+}
+
+// 日報修正申請
+function openReportFixModal(date) {
+  const session = getSession();
+  if (!session) return;
+  document.getElementById("fix-modal-bg").classList.add("hidden");
+  document.getElementById("report-modal-bg").classList.remove("hidden");
+  document.getElementById("report-modal-inner").innerHTML = `
+    <form id="report-fix-form">
+      <div style="margin-bottom:10px;"><b>${escapeHtml(date)} の日報修正申請</b></div>
+      <textarea id="report-fix-text" rows="4" maxlength="300" style="width:100%;"></textarea>
+      <div style="margin-top:10px;">
+        <button type="submit" class="btn" style="padding:7px 18px;font-size:1em;">申請</button>
+      </div>
+    </form>
+  `;
+  document.getElementById("report-fix-form").onsubmit = function(e){
+    e.preventDefault();
+    const text = document.getElementById("report-fix-text").value.trim();
+    if (!text) {
+      alert("日報を入力してください");
+      return;
+    }
+    const reqs = getAllRequests();
+    reqs.push({
+      id: Date.now() + Math.floor(Math.random()*100000),
+      type: "report",
+      empno: session.empno,
+      name: session.name,
+      dep: session.dep,
+      sec: session.sec,
+      targetDate: date,
+      content: text,
+      timestamp: Date.now()
+    });
+    setAllRequests(reqs);
+    closeReportModal();
+    alert("申請を受付けました。管理者の承認後に反映されます。");
+  };
+}
+
+// ------------------------------
+// モーダルの外側クリックで閉じる
+// ------------------------------
+window.onclick = function(event) {
+  if (event.target && event.target.classList) {
+    if (event.target.classList.contains("modal-bg")) {
+      event.target.classList.add("hidden");
+    }
+  }
+};
+</script>
 </body>
 </html>
